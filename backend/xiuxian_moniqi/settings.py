@@ -45,7 +45,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     'app_gate_way',
-    'app_user'
+    'app_user',
+    'app_item',
+    'app_clan',
+    'app_job',
+    'app_location'
 ]
 
 MIDDLEWARE = [
@@ -92,6 +96,7 @@ DATABASES = {
     }
 }
 
+
 # CHANNEL_LAYERS = {
 #     "default": {
 #         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -100,6 +105,7 @@ DATABASES = {
 #         },
 #     },
 # }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
