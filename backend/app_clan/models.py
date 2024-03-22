@@ -1,15 +1,17 @@
 from django.db import models
-
 from app_user.models import Characters
+
+import uuid
 
 # Create your models here.
 class Clan(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
     description = models.TextField(default='')
+    leader = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Clan_leader")
     member = models.IntegerField(default=1)
     level = models.IntegerField(default=1)
     exp = models.IntegerField(default=0)
-    exp_request = models.IntegerField(default=100)
 
     class Meta:
         db_table = 'tb_clan'
@@ -17,6 +19,7 @@ class Clan(models.Model):
 
 
 class ClanPosition(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="ClanPosition_char")
     clan = models.ForeignKey(Clan, on_delete=models.CASCADE, related_name="ClanPosition_clan")
     position = models.IntegerField(default=1)
@@ -27,18 +30,32 @@ class ClanPosition(models.Model):
 
 
 class RequestClan(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="RequestClan_char")
     clan = models.ForeignKey(Clan, on_delete=models.CASCADE, related_name="RequestClan_clan")
 
     class Meta:
         db_table = 'tb_request_clan'
-        verbose_name = 'Yêu cầu gia nhập'
+        verbose_name = 'Yêu cầu gia nhập môn phái'
 
 
-class OnlineClan(models.Model):
-    clan = models.ForeignKey(Clan, on_delete=models.CASCADE, related_name="OnlineClan_clan")
-    char = models.ManyToManyField(Characters, blank=True, related_name="OnlineClan_char")
-    
+class Organization(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=100)
+    description = models.TextField(default='')
+    member = models.IntegerField(default=0)
+
     class Meta:
-        db_table = 'tb_online_clan'
-        verbose_name = 'Thành viên môn phái có mặt'
+        db_table = 'tb_organization'
+        verbose_name = 'Thế lực'
+
+
+class OrganizationPosition(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="OrganizationPosition_char")
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="OrganizationPosition_organization")
+    position = models.IntegerField(default=1)
+
+    class Meta:
+        db_table = 'tb_organization_position'
+        verbose_name = 'Chức vị thế lực'

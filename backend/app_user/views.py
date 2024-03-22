@@ -1,4 +1,3 @@
-import datetime
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import permissions
@@ -6,63 +5,31 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.utils import timezone
+from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
 
 from .models import (
-    User,
-    Characters,
-    Gifted,
-    Properties,
-    Bag,
-    Equipped,
-    Money,
-    Knowledge,
-    Study,
+    User, Characters, Properties,
+    Bag, Equipped, Money, Knowledge,
+    Study, StudyProcess,
     Relationship
     )
-
 from .serializers import (
-    UserRegisterSerializers,
-    CharactersSerializers,
-    GiftedSerializer,
-    BagSerializer,
-    MoneySerializer,
-    EquippedSerializer,
-    KnowledgeSerializer,
-    StudySerializer,
+    UserRegisterSerializers, CharactersSerializers,
+    BagSerializer, MoneySerializer, EquippedSerializer, KnowledgeSerializer,
+    StudySerializer, StudyProcessSerializer,
     RelationshipSerializer
     )
 from app_item.models import Item, Menu, Book
-from app_item.serializers import ItemSerializer
-from app_item.views import removeItemfromBag_function
-from app_location.models import TowerChallenge, Tower
-from app_location.serializers import TowerChallengeSerializer
-from xiuxian_moniqi.config import START_TIME
+from app_location.models import Tower
+from app_location.serializers import TowerSerializer
+from xiuxian_moniqi.function import f_add_properties, f_addBooktoBag, f_addItemtoBag, f_remove_properties, f_removeBookfromBag, f_removeItemfromBag
 
 import random
-from datetime import datetime, timezone
 
-# from celery.schedules import crontab
-# from celery.task import periodic_task
-
-# @periodic_task(run_every=crontab(minute=1))
-# def function():
-#     print("1")
 
 # Create your views here.
-def add_properties(properties, item):
-    properties_dict = dict(item.properties)
-    for j in properties_dict:
-        old_value = getattr(properties, j)
-        setattr(properties, j, old_value + properties_dict[j])
-    properties.save()
-
-def remove_properties(properties, item):
-    properties_dict = dict(item.properties)
-    for j in properties_dict:
-        old_value = getattr(properties, j)
-        setattr(properties, j, old_value - properties_dict[j])
-    properties.save()
-
 
 class RegisterUser(APIView):
     def post(self, request):
@@ -93,15 +60,14 @@ class LoginView(APIView):
             return Response("Password inccorect.", status=400)
 
         refresh = TokenObtainPairSerializer.get_token(user)
-        user.last_login = datetime.datetime.now()
+        user.last_login = timezone.now()
         user.save()
         response = {
             'username': user.username,
             'access': str(refresh.access_token),
             'refresh': str(refresh)
         }
-
-        return Response(response, status=201)
+        return Response(response, status=200)
 
 
 @permission_classes([permissions.IsAuthenticated])
@@ -141,23 +107,13 @@ class CharactersView(APIView):
             char_serializer = CharactersSerializers(context={"request": request}, data=request_copy)
             if char_serializer.is_valid():
                 char_serializer.save()
-                return Response(char_serializer.data, status=201)
+                return Response(char_serializer.data, status=200)
         return Response(char_serializer.errors, status=400)
     
     def delete(self, request):
         try:
             char = Characters.objects.get(user=request.user)
-            properties = Properties.objects.get(char=char)
-            bag = Bag.objects.get(char=char)
-            equipped = Equipped.objects.get(char=char)
-            money = Money.objects.get(char=char)
-
-            bag.delete()
-            properties.delete()
             char.delete()
-            equipped.delete()
-            money.delete()
-            
             return Response("Delete successfull!", status=200)
         except Exception as e:
             return Response(str(e), status=400)
@@ -167,38 +123,18 @@ class CharactersView(APIView):
 @permission_classes([permissions.IsAuthenticated])
 def getCurrChar(request):
     try:
-        now = datetime.now(timezone.utc)
-        start_time = datetime.strptime(START_TIME, "%d-%m-%Y %H:%M:%S").replace(tzinfo=timezone.utc)
-        duration = now - start_time
-        duration_year = duration / 365
-
         char = Characters.objects.get(user=request.user)
         properties = Properties.objects.get(char=char)
+        duration = timezone.now() - char.date_join
+        time = (duration.days * 288) // 365
+        properties.tuoi = time + 1
+        properties.save()
 
         if properties.tuoi > properties.tuoi_tho:
-            return Response("The lifespan limit has been reached", status=202)
+            return Response("The lifespan limit has been reached.", status=201)
         
         char_ser = CharactersSerializers(char)
         return Response(char_ser.data, status=200)
-    except Exception as e:
-        return Response(str(e), status=400)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def getGiftedList(request):
-    gifted = Gifted.objects.all()
-    gifted_ser = GiftedSerializer(gifted, many=True)
-    return Response(gifted_ser.data, status=200)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def getGiftedDetail(request, id):
-    try:
-        gifted = Gifted.objects.get(id=id)
-        gifted_ser = GiftedSerializer(gifted)
-        return Response(gifted_ser.data, status=200)
     except Exception as e:
         return Response(str(e), status=400)
 
@@ -258,27 +194,26 @@ class EquippedView(APIView):
             item = Item.objects.get(id=item_id)
             if item.type == '1':
                 if equipped.hand:
-                    remove_properties(properties, equipped.hand)
+                    f_remove_properties(properties, equipped.hand)
                 equipped.hand = item
             elif item.type == '2':
-                if equipped.foot:
-                    remove_properties(properties, equipped.foot)
-                equipped.foot = item
+                if equipped.head:
+                    f_remove_properties(properties, equipped.head)
+                equipped.head = item
             elif item.type == '3':
                 if equipped.shirt:
-                    remove_properties(properties, equipped.shirt)
+                    f_remove_properties(properties, equipped.shirt)
                 equipped.shirt = item
             elif item.type == '4':
                 if equipped.trousers:
-                    remove_properties(properties, equipped.trousers)
+                    f_remove_properties(properties, equipped.trousers)
                 equipped.trousers = item
             else:
-                return Response("Don't equip this item", status=400)
+                return Response("Mustn't equip this item.", status=400)
 
-            add_properties(properties, item)
+            f_add_properties(properties, item)
             equipped.save()
-            
-            return Response("Use successful.", status=200)
+            return Response("Equip successful.", status=200)
         except Exception as e:
             return Response(str(e), status=400)
     
@@ -289,22 +224,21 @@ class EquippedView(APIView):
         properties = Properties.objects.get(char=char)
         try:
             if type == '1':
-                remove_properties(properties, equipped.hand)
+                f_remove_properties(properties, equipped.hand)
                 equipped.hand = None
             elif type == '2':
-                remove_properties(properties, equipped.foot)
-                equipped.foot = None
+                f_remove_properties(properties, equipped.head)
+                equipped.head = None
             elif type == '3':
-                remove_properties(properties, equipped.shirt)
+                f_remove_properties(properties, equipped.shirt)
                 equipped.shirt = None
             elif type == '4':
-                remove_properties(properties, equipped.trousers)
+                f_remove_properties(properties, equipped.trousers)
                 equipped.trousers = None
             else:
                 return Response("Type unable!", status=400)
 
             equipped.save()
-            
             return Response("Remove successful.", status=200)
         except Exception as e:
             return Response(str(e), status=400)
@@ -320,14 +254,8 @@ def useItem(request, id):
         bag = Bag.objects.get(char=char)
 
         if item.type == "5":
-            add_properties(properties, item)
-            try:
-                bag.items[str(item.id)] -= 1
-                if bag.items[str(item.id)] <= 0:
-                    del bag.items[str(item.id)]
-            except:
-                del bag.items[str(item.id)]
-            bag.save()
+            f_add_properties(properties, item)
+            f_removeItemfromBag(bag, item)
             return Response("Use successful!", status=200)
         else:
             return Response("Type unable!", status=400)
@@ -343,13 +271,13 @@ def buyItem(request, id):
         item = Item.objects.get(id=id)
         bag = Bag.objects.get(char=char)
         money = Money.objects.get(char=char)
-        try:
-            bag.items[str(item.id)] += 1
-        except:
-            bag.items[str(item.id)] = 1
-        bag.save()
+
         money.money -= item.price
+        if money.money < 0:
+            return Response("Money not enough.", status=400)
         money.save()
+        f_addItemtoBag(bag, item)
+
         return Response("Buy item successful!", status=200)
     except Exception as e:
         return Response(str(e), status=400)
@@ -364,18 +292,7 @@ def sellItem(request, id):
         bag = Bag.objects.get(char=char)
         money = Money.objects.get(char=char)
 
-        try:
-            bag.items[str(item.id)]
-        except:
-            return Response("Don't have item!", status=200)
-        
-        try:
-            bag.items[str(item.id)] -= 1
-            if bag.items[str(item.id)] <= 0:
-                del bag.items[str(item.id)]
-        except:
-            del bag.items[str(item.id)]
-        bag.save()
+        f_removeItemfromBag(bag, item)
         money.money += item.price * 0.75
         money.save()
 
@@ -392,13 +309,13 @@ def buyBook(request, id):
         book = Book.objects.get(id=id)
         bag = Bag.objects.get(char=char)
         money = Money.objects.get(char=char)
-        try:
-            bag.books[str(book.id)] += 1
-        except:
-            bag.books[str(book.id)] = 1
-        bag.save()
+
         money.money -= book.price
+        if money.money < 0:
+            return Response("Money not enough.", status=400)
         money.save()
+        f_addBooktoBag(bag, book)
+
         return Response("Buy book successful!", status=200)
     except Exception as e:
         return Response(str(e), status=400)
@@ -413,18 +330,7 @@ def sellBook(request, id):
         bag = Bag.objects.get(char=char)
         money = Money.objects.get(char=char)
 
-        try:
-            bag.books[str(book.id)]
-        except:
-            return Response("Don't have item!", status=200)
-        
-        try:
-            bag.books[str(book.id)] -= 1
-            if bag.books[str(book.id)] <= 0:
-                del bag.books[str(book.id)]
-        except:
-            del bag.books[str(book.id)]
-        bag.save()
+        f_removeBookfromBag(bag, book)
         money.money += book.price * 0.75
         money.save()
 
@@ -433,73 +339,71 @@ def sellBook(request, id):
         return Response(str(e), status=400)
 
 
-@api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def getStudy(request):
-    char = Characters.objects.get(user=request.user)
-    study = Study.objects.get(char=char)
-    study_ser = StudySerializer(study)
-    return Response(study_ser.data, status=200)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def studyBook(request, id):
-    r = request.data.get('r')
-    try:
-        book = Book.objects.get(id=id)
+class StudyView(APIView):
+    def get(self, request):
+        char = Characters.objects.get(user=request.user)
+        study = Study.objects.get(char=char)
+        study_ser = StudySerializer(study)
+        return Response(study_ser.data, status=200)
+    
+    def post(self, request):
+        book_id = request.data.get('book')
+        book = Book.objects.get(id=book_id)
         char = Characters.objects.get(user=request.user)
         properties = Properties.objects.get(char=char)
-        study = Study.objects.get(char=char)
-        bag = Bag.objects.get(char=char)
-        
-        if str(book.id) not in bag.books:
-            return Response("You don't have this book", status=400)
-        
+
         if properties.canh_gioi < book.level:
             return Response("Level not enough!", status=400)
+        try:
+            StudyProcess.objects.get(char=char, book=book)
+        except:
+            StudyProcess.objects.create(char=char, book=book)
+        return Response("Start study", status=200)
+    
 
-        if book.attribute == '1':
-            rate_1 = properties.hoa_linh_can
-        elif book.attribute == '2':
-            rate_1 = properties.thuy_linh_can
-        elif book.attribute == '3':
-            rate_1 = properties.tho_linh_can
-        elif book.attribute == '4':
-            rate_1 = properties.moc_linh_can
-        elif book.attribute == '5':
-            rate_1 = properties.phong_linh_can
-        elif book.attribute == '6':
-            rate_1 = properties.loi_linh_can
-        
-        rate_2 = int(r) * 10
-        if rate_1 > 100: rate_1 = 100
-        rate_final = (rate_1 + rate_2)/2
-        
-        if random.randint(0, 100) <= rate_final:
-            add_properties(properties, book)
-            try:
-                bag.books[str(book.id)] -= 1
-                if bag.books[str(book.id)] <= 0:
-                    del bag.books[str(book.id)]
-            except:
-                del bag.books[str(book.id)]
-            bag.save()
-            study.book.add(book)
-            study.save()
-            return Response("Study successful!", status=200)
+@permission_classes([permissions.IsAuthenticated])
+class StudyProcessView(APIView):
+    def get(self, request):
+        char = Characters.objects.get(user=request.user)
+        study_process = StudyProcess.objects.filter(char=char)
+        pagination = PageNumberPagination()
+        page = pagination.paginate_queryset(study_process, request)
+        study_ser = StudyProcessSerializer(page, many=True)
+        return pagination.get_paginated_response(study_ser.data)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class StudyProcessDetailView(APIView):
+    def get(self, request, id):
+        study_process = StudyProcess.objects.get(id=id)
+        study_process_ser = StudyProcessSerializer(study_process)
+        return Response(study_process_ser.data, status=200)
+
+    def post(self, request, id):
+        time = request.data.get('time')
+        item = request.data.get('item')
+
+        char = Characters.objects.get(user=request.user)
+        study = Study.objects.get(char=char)
+        study_process = StudyProcess.objects.get(id=id)
+        bag = Bag.objects.get(char=char)
+
+        if item:
+            item = Item.objects.get(id=item)
+            f_removeItemfromBag(bag, item)
+            if item.type == '7':
+                study_process.process += 10
         else:
-            try:
-                bag.books[str(book.id)] -= 1
-                if bag.books[str(book.id)] <= 0:
-                    del bag.books[str(book.id)]
-            except:
-                del bag.books[str(book.id)]
-            bag.save()
-            return Response("Study fail!", status=200)
+            study_process.process += int(time)
 
-    except Exception as e:
-        return Response(str(e), status=400)
+        if study_process.process >= study_process.book.duration:
+            study.book.add(study_process.book)
+            study.save()
+            study_process.delete()
+            return Response("Study successful!", status=200)
+        study_process_ser = StudyProcessSerializer(study_process)
+        return Response(study_process_ser.data, status=200)
     
 
 @permission_classes([permissions.IsAuthenticated])
@@ -524,8 +428,6 @@ class KnowledgeView(APIView):
                 properties.luyen_khi += 1
             elif menu.type == '2':
                 properties.luyen_dan += 1
-            elif menu.type == '3':
-                properties.hoa_phu += 1
             properties.save()
             
             return Response("Read successful!", status=200)
@@ -546,15 +448,10 @@ def LevelUpView(request):
     if properties.may_man > 100:
         rate_1 = 100
     else: rate_1 = properties.may_man
-
-    if properties.ngo_tinh > 100:
-        rate_2 = 100
-    else: rate_2 = properties.ngo_tinh
     
     if r:
-        rate_3 = int(r)*10
-    else: rate_3 = 0
-    rate_final = int((rate_1 + rate_2 + rate_3)/3)
+        rate_2 = int(r)*10
+    rate_final = int((rate_1 + rate_2)/2)
     
     num_rand = random.randint(0, 100)
     if num_rand <= rate_final:
@@ -563,19 +460,13 @@ def LevelUpView(request):
         properties.linh_luc_yeu_cau += 200 * properties.canh_gioi
 
         properties.tuoi_tho += 50 * properties.canh_gioi
-        properties.tam_tinh += 100 * properties.canh_gioi
-        properties.niem_luc += 5 * properties.canh_gioi
+        properties.tam_tinh = 100
         properties.suc_khoe = 10
 
         properties.mau_huyet += 100 * properties.canh_gioi
         properties.cong_kich += 10 * properties.canh_gioi
         properties.phong_ngu += 1 * properties.canh_gioi
         properties.toc_do += 1 * properties.canh_gioi
-        properties.khang_cong += 1 * properties.canh_gioi
-        properties.khang_linh += 1 * properties.canh_gioi
-        properties.bao_kich += 1 * properties.canh_gioi
-        properties.khang_bao += 1 * properties.canh_gioi
-        properties.ne_tranh += 1 * properties.canh_gioi
 
         properties.save()
         return Response("Level up!", status=200)
@@ -592,37 +483,50 @@ def LevelUpView(request):
 @permission_classes([permissions.IsAuthenticated])
 def getRank(request):
     type = request.query_params.get('type')
-    
-    if type == 'money':
+    pagination = PageNumberPagination()
+    if type == '1':
         money = Money.objects.all().order_by('-money')
-        results = MoneySerializer(money, many=True)
-    elif type == 'dedication':
+        page = pagination.paginate_queryset(money, request)
+        results = MoneySerializer(page, many=True)
+
+    elif type == '2':
         dedication = Money.objects.all().order_by('-dedication')
-        results = MoneySerializer(dedication, many=True)
-    else:
-        tower = Tower.objects.get(id=type)
-        challenge = TowerChallenge.objects.filter(tower=tower).order_by('-floor')
-        results = TowerChallengeSerializer(challenge, many=True)
+        page = pagination.paginate_queryset(dedication, request)
+        results = MoneySerializer(page, many=True)
     
-    return Response(results.data, status=200)
+    elif type == '3':
+        tower = Tower.objects.all().order_by('-floor')
+        page = pagination.paginate_queryset(tower, request)
+        results = TowerSerializer(page, many=True)
+
+    return pagination.get_paginated_response(results.data)
 
 
 @permission_classes([permissions.IsAuthenticated])
 class RelationshipView(APIView):
     def get(self, request):
         partner = request.query_params.get('partner')
-        char_1 = Characters.objects.get(user=request.user)
-        char_2 = Characters.objects.get(id=partner)
+        if partner:
+            char_1 = Characters.objects.get(user=request.user)
+            char_2 = Characters.objects.get(id=partner)
 
-        try:
-            relation = Relationship.objects.get(char1=char_1, char2=char_2)
-        except:
             try:
-                relation = Relationship.objects.get(char1=char_2, char2=char_1)
+                relation = Relationship.objects.get(char1=char_1, char2=char_2)
             except:
-                relation = Relationship.objects.create(char1=char_1, char2=char_2)
-        relation_ser = RelationshipSerializer(relation)
-        return Response(relation_ser.data, status=200)
+                try:
+                    relation = Relationship.objects.get(char1=char_2, char2=char_1)
+                except:
+                    relation = Relationship.objects.create(char1=char_1, char2=char_2)
+            relation_ser = RelationshipSerializer(relation)
+            return Response(relation_ser.data, status=200)
+        
+        else:
+            char = Characters.objects.get(user=request.user)
+            relation = Relationship.objects.filter(Q(char1=char) | Q(char2=char))
+            pagination = PageNumberPagination()
+            page = pagination.paginate_queryset(relation, request)
+            relation_ser = RelationshipSerializer(page, many=True)
+            return pagination.get_paginated_response(relation_ser.data)
     
     def post(self, request):
         partner = request.data.get('partner')
@@ -639,7 +543,7 @@ class RelationshipView(APIView):
                 relation = Relationship.objects.get(char1=char_2, char2=char_1)
             except:
                 relation = Relationship.objects.create(char1=char_1, char2=char_2)
-        removeItemfromBag_function(bag, item)
+        f_removeItemfromBag(bag, item)
         relation.point += 10
         relation.save()
         relation_ser = RelationshipSerializer(relation)

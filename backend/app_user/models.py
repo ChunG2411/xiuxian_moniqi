@@ -1,10 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 
 from .managers import CustomUserManager
-from xiuxian_moniqi.config import GENDER, BACKGROUND
-from app_item.models import Item, Menu, Book
+from xiuxian_moniqi.config import GENDER
+from app_item.models import Item, Menu, Book, Pet, Maid
 
 import uuid
 
@@ -24,17 +24,8 @@ class User(AbstractUser):
         verbose_name = 'Người dùng'
 
 
-class Gifted(models.Model):
-    name = models.CharField(max_length=50)
-    description = models.TextField(default="")
-    properties = models.JSONField()
-
-    class Meta:
-        db_table = 'tb_gifted'
-        verbose_name = 'Tiên thiên khí vận'
-
-
 class Title(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=50)
     description = models.TextField(default="")
 
@@ -48,9 +39,7 @@ class Characters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="Characters_user")
     name = models.CharField(max_length=50)
     gender = models.CharField(max_length=10, choices=GENDER)
-    appearance = models.ImageField(upload_to='avatar', null=True, blank=True, default='temp/avatar.png')
-    background = models.CharField(max_length=10, choices=BACKGROUND)
-    gifted = models.ManyToManyField(Gifted, blank=True, related_name="Characters_gifted")
+    appearance = models.ImageField(upload_to='appearance', null=True, blank=True, default='temp/avatar.png')
     title = models.ManyToManyField(Title, blank=True, related_name="Characters_title")
     date_join = models.DateTimeField(auto_now_add=True)
 
@@ -65,50 +54,35 @@ class Properties(models.Model):
     canh_gioi = models.IntegerField(default=1)
     linh_luc = models.IntegerField(default=0)
     linh_luc_yeu_cau = models.IntegerField(default=100)
+    power = models.IntegerField(default=0)
 
-    tuoi = models.IntegerField(default=10, verbose_name="tuổi")
+    tuoi = models.IntegerField(default=1, verbose_name="tuổi")
     tuoi_tho = models.IntegerField(default=80, verbose_name="tuổi thọ")
-    tam_tinh = models.IntegerField(default=50, verbose_name="tâm tình")
-    suc_khoe = models.IntegerField(default=50, verbose_name="sức khỏe")
-
-    niem_luc = models.IntegerField(default=0, verbose_name="niệm lực")
-    may_man = models.IntegerField(default=1, verbose_name="may mắn")
-    ngo_tinh = models.IntegerField(default=1, verbose_name="ngộ tính")
-    danh_vong = models.IntegerField(default=0, verbose_name="danh vọng")
-    mi_luc = models.IntegerField(default=1, verbose_name="mị lực")
-    sat_khi = models.IntegerField(default=0, verbose_name="sát khí")
+    tam_tinh = models.IntegerField(default=10, verbose_name="tâm tình")
+    suc_khoe = models.IntegerField(default=10, verbose_name="sức khỏe")
 
     mau_huyet = models.IntegerField(default=100, verbose_name="máu huyết")
     cong_kich = models.IntegerField(default=10, verbose_name="công kích")
     phong_ngu = models.IntegerField(default=1, verbose_name="phòng ngự")
     toc_do = models.IntegerField(default=1, verbose_name="tốc độ")
-    khang_cong = models.IntegerField(default=1, verbose_name="kháng công")
-    khang_linh = models.IntegerField(default=1, verbose_name="kháng linh")
-    bao_kich = models.IntegerField(default=0, verbose_name="bạo kích")
-    khang_bao = models.IntegerField(default=0, verbose_name="kháng bạo")
-    ne_tranh = models.IntegerField(default=0, verbose_name="né tránh")
-
-    hoa_linh_can = models.IntegerField(default=1, verbose_name="hỏa linh căn")
-    thuy_linh_can = models.IntegerField(default=1, verbose_name="thủy linh căn")
-    phong_linh_can = models.IntegerField(default=1, verbose_name="phong linh căn")
-    moc_linh_can = models.IntegerField(default=1, verbose_name="mộc linh căn")
-    tho_linh_can = models.IntegerField(default=1, verbose_name="thổ linh căn")
-    loi_linh_can = models.IntegerField(default=1, verbose_name="lôi linh căn")
 
     luyen_khi = models.IntegerField(default=0, verbose_name="luyện khí")
     luyen_dan = models.IntegerField(default=0, verbose_name="luyện đan")
-    hoa_phu = models.IntegerField(default=0, verbose_name="họa phù")
     duoc_lieu = models.IntegerField(default=0, verbose_name="dược liệu")
-    khoang_san = models.IntegerField(default=0, verbose_name="khoáng sản")
+    may_man = models.IntegerField(default=0, verbose_name="may mắn")
 
     class Meta:
         db_table = 'tb_properties'
         verbose_name = 'Thuộc tính'
+    
+    def save(self, *args, **kwargs):
+        self.power = self.mau_huyet + self.cong_kich + self.phong_ngu + self.toc_do
+        super().save(*args, **kwargs)
 
 
 class Bag(models.Model):
     char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Bag_characters")
-    items = models.JSONField(default={})
+    items = models.JSONField(default=dict)
     books = models.JSONField(default=dict)
 
     class Meta:
@@ -128,10 +102,10 @@ class Knowledge(models.Model):
 class Equipped(models.Model):
     char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Equipped_characters")
     hand = models.ForeignKey(Item, null=True, on_delete=models.CASCADE, related_name="Equipped_hand")
-    foot = models.ForeignKey(Item, null=True, on_delete=models.CASCADE, related_name="Equipped_foot")
+    head = models.ForeignKey(Item, null=True, on_delete=models.CASCADE, related_name="Equipped_head")
     shirt = models.ForeignKey(Item, null=True, on_delete=models.CASCADE, related_name="Equipped_shirt")
     trousers = models.ForeignKey(Item, null=True, on_delete=models.CASCADE, related_name="Equipped_trousers")
-
+    
     class Meta:
         db_table = 'tb_equipped'
         verbose_name = 'Trang bị'
@@ -144,7 +118,7 @@ class Money(models.Model):
 
     class Meta:
         db_table = 'tb_money'
-        verbose_name = 'Linh thạch'
+        verbose_name = 'Tiền tệ'
 
 
 class Study(models.Model):
@@ -154,7 +128,40 @@ class Study(models.Model):
     class Meta:
         db_table = 'tb_study'
         verbose_name = 'Công pháp lĩnh ngộ'
+
+
+class StudyProcess(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="StudyProcess_characters")
+    book = models.ForeignKey(Book, null=True, on_delete=models.CASCADE, related_name="StudyProcess_book")
+    process = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'tb_study_process'
+        verbose_name = 'Lĩnh ngộ công pháp'
     
+
+class OwnPet(models.Model):
+    char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="OwnPet_char")
+    pet = models.ForeignKey(Pet, null=True, on_delete=models.CASCADE, related_name="OwnPet_pet")
+    level = models.IntegerField(default=1)
+    exp = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'tb_own_pet'
+        verbose_name = 'Nuôi thú'
+
+
+class OwnMaid(models.Model):
+    char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="OwnMaid_char")
+    maid = models.ForeignKey(Maid, null=True, on_delete=models.CASCADE, related_name="OwnMaid_maid")
+    level = models.IntegerField(default=1)
+    exp = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'tb_own_maid'
+        verbose_name = 'Nuôi người hầu'
+
 
 class Relationship(models.Model):
     char1 = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Relationship_char1")
