@@ -212,10 +212,8 @@ class GardentSlotView(APIView):
         char = Characters.objects.get(user=request.user)
         gardent = Gardent.objects.get(char=char)
         gardent_slot = GardentSlot.objects.filter(gardent=gardent)
-        pagination = PageNumberPagination()
-        page = pagination.paginate_queryset(gardent_slot, request)
-        gar_slot_ser = GardentSlotSerializer(page, many=True)
-        return pagination.get_paginated_response(gar_slot_ser.data)
+        gar_slot_ser = GardentSlotSerializer(gardent_slot, many=True)
+        return Response(gar_slot_ser.data, status=200)
 
     def post(self, request):
         char = Characters.objects.get(user=request.user)
@@ -223,7 +221,7 @@ class GardentSlotView(APIView):
         money = Money.objects.get(char=char)
         slot = GardentSlot.objects.filter(gardent=gardent).count()
 
-        if slot == gardent.quality * 10:
+        if slot == gardent.quality * 3 + gardent.level:
             return Response("The gardent slot limit has been reached!", status=400)
 
         money.money -= (slot + 1)*2000
@@ -351,11 +349,9 @@ class CageSlotView(APIView):
     def get(self, request):
         char = Characters.objects.get(user=request.user)
         cage = Cage.objects.get(char=char)
-        cage_slot = GardentSlot.objects.filter(cage=cage)
-        pagination = PageNumberPagination()
-        page = pagination.paginate_queryset(cage_slot, request)
-        cage_slot_ser = CageSlotSerializer(page, many=True)
-        return pagination.get_paginated_response(cage_slot_ser.data)
+        cage_slot = CageSlot.objects.filter(cage=cage)
+        cage_slot_ser = CageSlotSerializer(cage_slot, many=True)
+        return Response(cage_slot_ser.data, status=200)
 
     def post(self, request):
         char = Characters.objects.get(user=request.user)
@@ -363,7 +359,7 @@ class CageSlotView(APIView):
         money = Money.objects.get(char=char)
         slot = CageSlot.objects.filter(cage=cage).count()
 
-        if slot == cage.quality * 10:
+        if slot == cage.quality * 3 + cage.level:
             return Response("The cage slot limit has been reached!", status=400)
 
         money.money -= (slot + 1)*2000
@@ -492,10 +488,8 @@ class LakeSlotView(APIView):
         char = Characters.objects.get(user=request.user)
         lake = Lake.objects.get(char=char)
         lake_slot = LakeSlot.objects.filter(lake=lake)
-        pagination = PageNumberPagination()
-        page = pagination.paginate_queryset(lake_slot, request)
-        lake_slot_ser = CageSlotSerializer(page, many=True)
-        return pagination.get_paginated_response(lake_slot_ser.data)
+        lake_slot_ser = LakeSlotSerializer(lake_slot, many=True)
+        return Response(lake_slot_ser.data, status=200)
 
     def post(self, request):
         char = Characters.objects.get(user=request.user)
@@ -503,7 +497,7 @@ class LakeSlotView(APIView):
         money = Money.objects.get(char=char)
         slot = LakeSlot.objects.filter(lake=lake).count()
 
-        if slot == lake.quality * 10:
+        if slot == lake.quality * 3 + lake.level:
             return Response("The lake slot limit has been reached!", status=400)
 
         money.money -= (slot + 1)*2000
@@ -633,7 +627,6 @@ def Meditation(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def getCurTime(request):
     now = datetime.now(timezone.utc)
     start_time = datetime.strptime(

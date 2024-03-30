@@ -119,14 +119,14 @@ def f_getRandomBook(type):
 
 
 def f_getListItem(type, quality, level, order_price):
-    item = None
+    item = Item.objects.all()
     if type:
-        item = Item.objects.filter(type=type)
+        item = item.filter(type=type)
     if quality:
         item = item.filter(quality=quality)
     if level:
         item = item.filter(level=level)
-    if order_price == '1':
+    if order_price:
         item = item.order_by('price')
     else:
         item = item.order_by('-price')
@@ -134,14 +134,14 @@ def f_getListItem(type, quality, level, order_price):
 
 
 def f_getListBook(attribute, quality, level, order_price):
-    item = None
+    item = Book.objects.all()
     if attribute:
-        item = Book.objects.filter(attribute=attribute)
+        item = item.filter(attribute=attribute)
     if quality:
         item = item.filter(quality=quality)
     if level:
         item = item.filter(level=level)
-    if order_price == '1':
+    if order_price:
         item = item.order_by('price')
     else:
         item = item.order_by('-price')

@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'daphne',
+    'corsheaders',
 
     "django.contrib.admin",
     "django.contrib.auth",

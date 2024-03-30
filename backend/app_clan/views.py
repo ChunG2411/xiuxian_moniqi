@@ -4,7 +4,7 @@ from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 
-from .serializers import ClanSerializer, RequestClanSerializer, OrganizationSerializer
+from .serializers import ClanSerializer, RequestClanSerializer, OrganizationSerializer, ClanPositionSerializer
 from .models import Clan, ClanPosition, RequestClan, Organization, OrganizationPosition
 from app_user.models import Characters, Money, Bag
 from app_item.models import Item, Book
@@ -24,9 +24,17 @@ class ClanView(APIView):
         return pagination.get_paginated_response(clan_ser.data)
     
     def post(self, request):
+        char = Characters.objects.get(user=request.user)
+        money = Money.objects.get(char=char)
+        if money.money >= 100000:
+            money.money -= 100000
+        else:
+            return Response("You don't have enough money", status=400)
+            
         clan_ser = ClanSerializer(context={"request": request}, data=request.data)
         if clan_ser.is_valid():
             clan_ser.save()
+            money.save()
             return Response(clan_ser.data, status=200)
         else:
             return Response(clan_ser.errors, status=400)
@@ -35,12 +43,19 @@ class ClanView(APIView):
 @permission_classes([permissions.IsAuthenticated])
 class ClanDetailView(APIView):
     def get(self, request, id):
-        try:
+        if id == 'current':
+            try:
+                char = Characters.objects.get(user=request.user)
+                position = ClanPosition.objects.get(char=char)
+                clan_ser = ClanSerializer(position.clan).data
+                clan_ser['position'] = position.position
+                return Response(clan_ser, status=200)
+            except:
+                return Response("Don't have clan", status=400)
+        else:
             clan = Clan.objects.get(id=id)
             clan_ser = ClanSerializer(clan)
             return Response(clan_ser.data, status=200)
-        except Exception as e:
-            return Response(str(e), status=400)
     
     def delete(self, request, id):
         try:
@@ -82,6 +97,11 @@ class RequestClanView(APIView):
         clan = Clan.objects.get(id=id)
         char = Characters.objects.get(user=request.user)
         try:
+            ClanPosition.objects.get(char=char)
+            return Response("You already in another clan", status=400)
+        except:
+            pass
+        try:
             RequestClan.objects.get(char=char, clan=clan)
             return Response("Request already exist!", status=400)
         except:
@@ -118,6 +138,7 @@ def acceptRequest(request, id):
             except:
                 ClanPosition.objects.create(char=char, clan=clan, position=1)
             request_clan.delete()
+            RequestClan.objects.filter(char=char).delete()
             return Response("Accept successful!", status=200)
         else:
             return Response("You don't have permissions!", status=200)
@@ -228,26 +249,53 @@ def upPosition_Clan(request, id):
         return Response("Up position successful!", status=200)
     else:
         return Response("Dedication not enough!", status=400)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class MemberClanView(APIView):
+    def get(self, request, id):
+        clan = Clan.objects.get(id=id)
+        position = ClanPosition.objects.filter(clan=clan)
+        pagination = PageNumberPagination()
+        page = pagination.paginate_queryset(position, request)
+        serializer = ClanPositionSerializer(page, many=True)
+        return pagination.get_paginated_response(serializer.data)
     
+    def delete(self, request, id):
+        char_id = request.query_params.get('char')
+        char = Characters.objects.get(id=char_id)
+        my_char = Characters.objects.get(user=request.user)
+        my_position = ClanPosition.objects.get(char=my_char)
+        clan = Clan.objects.get(id=id)
+        positon = ClanPosition.objects.get(char=char, clan=clan)
+
+        if my_position.position == 0 or my_position.position >= 6:
+            positon.delete()
+            clan.member -= 1
+            clan.save()
+            return Response("Delete member successfull", status=200)
+        else:
+            return Response("You don't have permission", status=400)
+
 
 @permission_classes([permissions.IsAuthenticated])
 class ClanShopView(APIView):
     def get(self, request, id):
-        shop = request.query_params.get('shop')
+        tab = request.query_params.get('tab')
         type = request.query_params.get('type')
 
         clan = Clan.objects.get(id=id)
         pagination = PageNumberPagination()
-        if shop == 'item':
+        if tab == '1':
             results = Item.objects.filter(
-                            type=type,
                             quality__lte=clan.level,
                             level__lte=clan.level)
+            if type:
+                results = results.filter(type=type)
             page = pagination.paginate_queryset(results, request)
             results_ser = ItemSerializer(page, many=True)
         else:
             results = Book.objects.filter(
-                            attribute=type,
                             quality__lte=clan.level,
                             level__lte=clan.level)
             page = pagination.paginate_queryset(results, request)
@@ -256,23 +304,23 @@ class ClanShopView(APIView):
         return pagination.get_paginated_response(results_ser.data)
     
     def post(self, request, id):
-        shop = request.data.get('shop')
+        tab = request.data.get('tab')
         item_id = request.data.get('item_id')
 
         char = Characters.objects.get(user=request.user)
         money = Money.objects.get(char=char)
         bag = Bag.objects.get(char=char)
 
-        if shop == 'item':
+        if tab == '1':
             item = Item.objects.get(id=item_id)
-            money.dedication -= item.price*2
+            money.dedication -= int(item.price/2)
             if money.dedication < 0:
                 return Response("Dedication not enough!", status=400)
             f_addItemtoBag(bag, item)
             money.save()
         else:
             item = Book.objects.get(id=item_id)
-            money.dedication -= item.price*2
+            money.dedication -= int(item.price/2)
             if money.dedication < 0:
                 return Response("Dedication not enough!", status=400)
             f_addBooktoBag(bag, item)
@@ -357,11 +405,11 @@ def upPosition_Organization(request, id):
     position = OrganizationPosition.objects.get(char=char, organization=organization)
     money = Money.objects.get(char=char)
     
-    if money.dedication >=  position.position*10000:
-        money.dedication -= position.position*10000
+    if money.merit >=  position.position*10000:
+        money.merit -= position.position*10000
         money.save()
         position.position += 1
         position.save()
         return Response("Up position successful!", status=200)
     else:
-        return Response("Dedication not enough!", status=400)
+        return Response("Merit not enough!", status=400)

@@ -6,9 +6,9 @@ from rest_framework.pagination import PageNumberPagination
 
 from .models import Item, Menu, Book
 from .serializers import ItemSerializer, MenuSerializer, BookSerializer
-from app_user.models import Bag, Characters, Properties
+from app_user.models import Bag, Characters, Properties, Equipped
 from app_job.models import Oven
-from xiuxian_moniqi.function import f_addBooktoBag, f_getRandomBook, f_removeBookfromBag, f_removeItemfromBag, f_addItemtoBag, f_getRandomItem, f_getListItem, f_getListBook
+from xiuxian_moniqi.function import f_addBooktoBag, f_getRandomBook, f_remove_properties, f_removeBookfromBag, f_removeItemfromBag, f_addItemtoBag, f_getRandomItem, f_getListItem, f_getListBook
 
 import random
 
@@ -85,7 +85,23 @@ def removeItemfromBag(request, id):
     try:
         char = Characters.objects.get(user=request.user)
         item = Item.objects.get(id=id)
+        equip = Equipped.objects.get(char=char)
+        properties = Properties.objects.get(char=char)
         bag = Bag.objects.get(char=char)
+
+        if equip.head == item:
+            f_remove_properties(properties, equip.head)
+            equip.head = None
+        elif equip.hand == item:
+            f_remove_properties(properties, equip.hand)
+            equip.hand = None
+        elif equip.shirt == item:
+            f_remove_properties(properties, equip.shirt)
+            equip.shirt = None
+        elif equip.trousers == item:
+            f_remove_properties(properties, equip.trousers)
+            equip.trousers = None
+        equip.save()
         f_removeItemfromBag(bag, item)
         return Response("Remove item successful!", status=200)
     except Exception as e:
@@ -236,8 +252,8 @@ def createItem(request):
         
         if lucky_id:
             lucky_item = Item.objects.get(id=lucky_id)
-            if lucky_item.type == '8':
-                char_rate += 300
+            if lucky_item.type == '10':
+                char_rate += lucky_item.properties['may_man']
 
         for i in mater_split:
             for j in menu.materials.all():
@@ -251,8 +267,11 @@ def createItem(request):
         if random.randint(0, 1000) <= final_rate:
             if lucky_id: f_removeItemfromBag(bag, lucky_item)
             for i in mater_split:
-                item = Item.objects.get(id=i)
-                f_removeItemfromBag(bag, item)
+                try:
+                    item = Item.objects.get(id=i)
+                    f_removeItemfromBag(bag, item)
+                except:
+                    continue
             f_addItemtoBag(bag, menu.item)
             if menu.type == '1':
                 properties.luyen_khi += 1
@@ -263,9 +282,12 @@ def createItem(request):
         else:
             if lucky_id: f_removeItemfromBag(bag, lucky_item)
             for i in mater_split:
-                item = Item.objects.get(id=i)
-                f_removeItemfromBag(bag, item)
-            return Response("Create item fail!", status=200)
+                try:
+                    item = Item.objects.get(id=i)
+                    f_removeItemfromBag(bag, item)
+                except Exception as e:
+                    continue
+            return Response("Create item fail!", status=400)
         
     except Exception as e:
         return Response(str(e), status=400)

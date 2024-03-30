@@ -4,12 +4,12 @@ from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 
-from .models import City, Tower
-from .serializers import CitySerializer, TowerSerializer
+from .models import City, Tower, Question, QuestionChar
+from .serializers import CitySerializer, TowerSerializer, QuestionSerializer, QuestionCharSerializer
 from app_user.models import Bag, Characters, Properties, Money
-from app_item.models import Item
-from app_item.serializers import ItemSerializer
-from xiuxian_moniqi.function import f_removeItemfromBag, f_addItemtoBag, f_getRandomItem
+from app_item.models import Item, Book
+from app_item.serializers import ItemSerializer, BookSerializer
+from xiuxian_moniqi.function import f_removeItemfromBag, f_addItemtoBag, f_getRandomItem, f_addBooktoBag, f_removeBookfromBag
 
 import random
 
@@ -45,6 +45,76 @@ class CityDetailView(APIView):
 
 
 @permission_classes([permissions.IsAuthenticated])
+class CityShopView(APIView):
+    def get(self, request, id):
+        tab = request.query_params.get('tab')
+        type = request.query_params.get('type')
+
+        city = City.objects.get(id=id)
+        pagination = PageNumberPagination()
+        if tab == '1':
+            results = Item.objects.filter(
+                            quality__lte=city.quality,
+                            level__lte=city.quality)
+            if type:
+                results = results.filter(type=type)
+            page = pagination.paginate_queryset(results, request)
+            results_ser = ItemSerializer(page, many=True)
+        else:
+            results = Book.objects.filter(
+                            quality__lte=city.quality,
+                            level__lte=city.quality)
+            page = pagination.paginate_queryset(results, request)
+            results_ser = BookSerializer(page, many=True)
+
+        return pagination.get_paginated_response(results_ser.data)
+    
+    def post(self, request, id):
+        tab = request.data.get('tab')
+        item_id = request.data.get('item_id')
+
+        char = Characters.objects.get(user=request.user)
+        money = Money.objects.get(char=char)
+        bag = Bag.objects.get(char=char)
+
+        if tab == '1':
+            item = Item.objects.get(id=item_id)
+            money.money -= item.price
+            if money.money < 0:
+                return Response("Money not enough!", status=400)
+            f_addItemtoBag(bag, item)
+            money.save()
+        else:
+            item = Book.objects.get(id=item_id)
+            money.money -= item.price
+            if money.money < 0:
+                return Response("Money not enough!", status=400)
+            f_addBooktoBag(bag, item)
+            money.save()
+        return Response("Buy successful!", status=200)
+    
+    def patch(self, request, id):
+        tab = request.data.get('tab')
+        item_id = request.data.get('item_id')
+
+        char = Characters.objects.get(user=request.user)
+        money = Money.objects.get(char=char)
+        bag = Bag.objects.get(char=char)
+
+        if tab == '1':
+            item = Item.objects.get(id=item_id)
+            f_removeItemfromBag(bag, item)
+            money.money += int(item.price * 0.5)
+            money.save()
+        else:
+            item = Book.objects.get(id=item_id)
+            f_removeBookfromBag(bag, item)
+            money.money += int(item.price * 0.5)
+            money.save()
+        return Response("Sell successful!", status=200)
+    
+
+@permission_classes([permissions.IsAuthenticated])
 class TowerView(APIView):
     def get(self, request):
         char = Characters.objects.get(user=request.user)
@@ -64,7 +134,7 @@ class TowerView(APIView):
 
         prize = {
             'money': 0,
-            'item': []
+            'item': ''
         }
         if property.power <= (tower.floor + 1) * 123:
             return Response("Fail", status=400)
@@ -75,16 +145,16 @@ class TowerView(APIView):
             tower.save()
             money.save()
 
-            for i in range(tower.floor):
-                item = f_getRandomItem('')
+            item = f_getRandomItem('')
+            if item:
                 f_addItemtoBag(bag, item)
-                prize['item'].append(
-                    {
-                        'name': item.name,
-                        'image': item.image.url,
-                        'quality': item.quality
-                    }
-                )
+                prize['item'] = {
+                    'id': str(item.id),
+                    'name': item.name,
+                    'image': item.image.url,
+                    'quality': item.quality
+                }
+
         return Response(prize, status=200)
 
 
@@ -200,8 +270,58 @@ def GameResult(request):
     if result == '0':
         money.money -= int(money_request)
         money.save()
-        return Response({'money':money_request}, status=400)
+        return Response({'money': money_request}, status=400)
     else:
         money.money += int(money_request)
         money.save()
-        return Response({'money':money_request}, status=200)
+        return Response({'money': money_request}, status=200)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class QuestionView(APIView):
+    def post(self, request):
+        serializer = QuestionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        else:
+            return Response(serializer.errors, status=400)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class QuestionCharView(APIView):
+    def get(self, request):
+        char = Characters.objects.get(user=request.user)
+        try:
+            question_char = QuestionChar.objects.get(char=char)
+        except:
+            question_char = QuestionChar.objects.create(char=char)
+
+        try:
+            question = Question.objects.get(number=question_char.question + 1)
+        except:
+            question_char.question += 1
+            question_char.save()
+            return Response('End', status=400)
+        serializer = QuestionSerializer(question)
+        return Response(serializer.data, status=200)
+
+    def post(self, request):
+        question_id = request.data.get('question')
+        answer = request.data.get('answer')
+
+        question = Question.objects.get(id=question_id)
+        char = Characters.objects.get(user=request.user)
+        question_char = QuestionChar.objects.get(char=char)
+        money = Money.objects.get(char=char)
+
+        if question.answer_correct == int(answer):
+            question_char.question += 1
+            question_char.save()
+            money.money += 1000
+            money.save()
+            return Response({'money':1000}, status=200)
+        else:
+            question_char.question += 1
+            question_char.save()
+            return Response('Fail', status=400)

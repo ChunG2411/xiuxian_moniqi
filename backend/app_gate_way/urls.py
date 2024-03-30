@@ -21,7 +21,7 @@ from app_item.views import (
     BookView, BookDetailView, getRandomBook
 )
 from app_clan.views import (
-    ClanView, ClanDetailView, outClan,
+    ClanView, ClanDetailView, outClan, MemberClanView,
     RequestClanView, acceptRequest, rejectRequest,
     DedicationView, upClan, upPosition_Clan,
     ClanShopView,
@@ -38,8 +38,10 @@ from app_job.views import (
     getCurTime
 )
 from app_location.views import (
-    CityView, CityDetailView, TowerView,
-    FightResult, GameResult
+    CityView, CityDetailView, CityShopView,
+    TowerView,
+    FightResult, GameResult,
+    QuestionView, QuestionCharView
 )
 
 urlpatterns = [
@@ -85,6 +87,7 @@ urlpatterns = [
 
     path('clan', ClanView.as_view(), name="ClanView"),
     path('clan/<str:id>', ClanDetailView.as_view(), name="ClanDetailView"),
+    path('clan/<str:id>/member', MemberClanView.as_view(), name="MemberClanView"),
     path('clan/<str:id>/out', outClan, name="outClan"),
     path('clan/<str:id>/request', RequestClanView.as_view(), name="RequestClanView"),
     path('clan-request/<str:id>/accept', acceptRequest, name="acceptRequest"),
@@ -129,8 +132,13 @@ urlpatterns = [
 
     path('city', CityView.as_view(), name="CityView"),
     path('city/<str:id>', CityDetailView.as_view(), name="CityDetailView"),
+    path('city/<str:id>/shop', CityShopView.as_view(), name="CityShopView"),
+
     path('tower', TowerView.as_view(), name="TowerView"),
     path('fight', FightResult, name="FightResult"),
     path('game', GameResult, name="GameResult"),
+
+    path('question', QuestionView.as_view(), name="QuestionView"),
+    path('question/current', QuestionCharView.as_view(), name="QuestionCharView"),
 
 ]

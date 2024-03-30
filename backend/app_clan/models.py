@@ -8,6 +8,7 @@ class Clan(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
     description = models.TextField(default='')
+    image = models.ImageField(blank=True, default="temp/item.jpg", null=True, upload_to="clan")
     leader = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Clan_leader")
     member = models.IntegerField(default=1)
     level = models.IntegerField(default=1)
@@ -16,6 +17,7 @@ class Clan(models.Model):
     class Meta:
         db_table = 'tb_clan'
         verbose_name = 'Môn phái'
+        ordering = ['level']
 
 
 class ClanPosition(models.Model):
@@ -43,6 +45,7 @@ class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
     description = models.TextField(default='')
+    image = models.ImageField(blank=True, default="temp/item.jpg", null=True, upload_to="organization")
     member = models.IntegerField(default=0)
 
     class Meta:

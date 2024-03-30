@@ -20,32 +20,10 @@ class UserRegisterSerializers(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        password = request.data.get('password')
-
-        if len(password) < 6:
-            raise serializers.ValidationError(
-                "Password must be at least 6 characters.")
-
-        password_split = [*password]
-        if ord(password_split[0]) not in range(65, 90):
-            raise serializers.ValidationError(
-                "The first letter of the password must be capitalized.")
-        check_have_number = False
-        for i in password_split:
-            if ord(i) in range(48, 57):
-                check_have_number = True
-                break
-        if not check_have_number:
-            raise serializers.ValidationError("Password must contain number.")
-        validated_data['password'] = password
-
         user = User(**validated_data)
-        user.set_password(password)
+        user.set_password(validated_data['password'])
         user.save()
-
         return user
-
 
 class TitleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,8 +42,6 @@ class CharactersSerializers(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
-        request = self.context.get('request')
-
         char = Characters(**validated_data)
         char.save()
         Properties.objects.create(char=char)

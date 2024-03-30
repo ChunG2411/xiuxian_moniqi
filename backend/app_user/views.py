@@ -8,19 +8,20 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
+from django.core.validators import validate_email
 
 from .models import (
     User, Characters, Properties,
     Bag, Equipped, Money, Knowledge,
     Study, StudyProcess,
     Relationship
-    )
+)
 from .serializers import (
     UserRegisterSerializers, CharactersSerializers,
     BagSerializer, MoneySerializer, EquippedSerializer, KnowledgeSerializer,
     StudySerializer, StudyProcessSerializer,
     RelationshipSerializer
-    )
+)
 from app_item.models import Item, Menu, Book
 from app_location.models import Tower
 from app_location.serializers import TowerSerializer
@@ -33,7 +34,34 @@ import random
 
 class RegisterUser(APIView):
     def post(self, request):
-        serializer = UserRegisterSerializers(context={"request": request}, data=request.data)
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        try:
+            User.objects.get(email=email)
+            return Response("Email already exist", status=400)
+        except:
+            try:
+                validate_email(email)
+            except:
+                return Response("Email isn't valid", status=400)
+
+        if len(password) < 6:
+            return Response("Password must be at least 6 characters.", status=400)
+        
+        password_split = [*password]
+        if ord(password_split[0]) not in range(65, 90):
+            return Response("The first letter of the password must be capitalized.", status=400)
+        
+        check_have_number = False
+        for i in password_split:
+            if ord(i) in range(48, 57):
+                check_have_number = True
+                break
+        if not check_have_number:
+            return Response("Password must contain number.", status=400)
+
+        serializer = UserRegisterSerializers(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
@@ -57,7 +85,7 @@ class LoginView(APIView):
                 return Response("Username or Email don't exist.", status=400)
 
         if not user.check_password(password):
-            return Response("Password inccorect.", status=400)
+            return Response("Password incorect.", status=400)
 
         refresh = TokenObtainPairSerializer.get_token(user)
         user.last_login = timezone.now()
@@ -96,7 +124,7 @@ class CharactersView(APIView):
             return Response(char_serializer.data, status=200)
         except Exception as e:
             return Response(str(e), status=400)
-    
+
     def post(self, request):
         request_copy = request.data.copy()
         request_copy['user'] = request.user.id
@@ -104,12 +132,13 @@ class CharactersView(APIView):
             Characters.objects.get(user=request.user)
             return Response("Character already exist!", status=400)
         except:
-            char_serializer = CharactersSerializers(context={"request": request}, data=request_copy)
+            char_serializer = CharactersSerializers(
+                context={"request": request}, data=request_copy)
             if char_serializer.is_valid():
                 char_serializer.save()
                 return Response(char_serializer.data, status=200)
         return Response(char_serializer.errors, status=400)
-    
+
     def delete(self, request):
         try:
             char = Characters.objects.get(user=request.user)
@@ -132,7 +161,7 @@ def getCurrChar(request):
 
         if properties.tuoi > properties.tuoi_tho:
             return Response("The lifespan limit has been reached.", status=201)
-        
+
         char_ser = CharactersSerializers(char)
         return Response(char_ser.data, status=200)
     except Exception as e:
@@ -142,10 +171,31 @@ def getCurrChar(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def getBag(request):
+    tab = request.query_params.get('tab')
+    type = request.query_params.get('type')
+    quality = request.query_params.get('quality')
+    level = request.query_params.get('level')
+    attribute = request.query_params.get('attribute')
+
     char = Characters.objects.get(user=request.user)
     bag = Bag.objects.get(char=char)
-    bag_ser = BagSerializer(bag)
-    return Response(bag_ser.data, status=200)
+    bag_ser = BagSerializer(bag).data
+
+    results = []
+    if tab == '1':
+        results = bag_ser["items"]
+    else:
+        results = bag_ser["books"]
+    if type and tab == '1':
+        results = [i for i in results if i["type"] == type]
+    if attribute and tab == '2':
+        results = [i for i in results if i["attribute"] == attribute]
+    if quality:
+        results = [i for i in results if i["quality"] == int(quality)]
+    if level:
+        results = [i for i in results if i["level"] == int(level)]
+
+    return Response(results, status=200)
 
 
 @permission_classes([permissions.IsAuthenticated])
@@ -155,7 +205,7 @@ class MoneyView(APIView):
         money = Money.objects.get(char=char)
         money_ser = MoneySerializer(money)
         return Response(money_ser.data, status=200)
-    
+
     def post(self, request):
         rise = request.data.get('rise')
         char = Characters.objects.get(user=request.user)
@@ -180,7 +230,13 @@ class MoneyView(APIView):
 @permission_classes([permissions.IsAuthenticated])
 class EquippedView(APIView):
     def get(self, request):
-        char = Characters.objects.get(user=request.user)
+        char = request.query_params.get('char')
+
+        if not char:
+            char = Characters.objects.get(user=request.user)
+        else:
+            char = Characters.objects.get(id=char)
+
         equipped = Equipped.objects.get(char=char)
         equip_ser = EquippedSerializer(equipped)
         return Response(equip_ser.data, status=200)
@@ -216,7 +272,7 @@ class EquippedView(APIView):
             return Response("Equip successful.", status=200)
         except Exception as e:
             return Response(str(e), status=400)
-    
+
     def delete(self, request):
         type = request.query_params.get('type')
         char = Characters.objects.get(user=request.user)
@@ -242,7 +298,7 @@ class EquippedView(APIView):
             return Response("Remove successful.", status=200)
         except Exception as e:
             return Response(str(e), status=400)
-        
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -261,7 +317,7 @@ def useItem(request, id):
             return Response("Type unable!", status=400)
     except Exception as e:
         return Response(str(e), status=400)
-       
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -346,7 +402,7 @@ class StudyView(APIView):
         study = Study.objects.get(char=char)
         study_ser = StudySerializer(study)
         return Response(study_ser.data, status=200)
-    
+
     def post(self, request):
         book_id = request.data.get('book')
         book = Book.objects.get(id=book_id)
@@ -360,7 +416,7 @@ class StudyView(APIView):
         except:
             StudyProcess.objects.create(char=char, book=book)
         return Response("Start study", status=200)
-    
+
 
 @permission_classes([permissions.IsAuthenticated])
 class StudyProcessView(APIView):
@@ -385,6 +441,7 @@ class StudyProcessDetailView(APIView):
         item = request.data.get('item')
 
         char = Characters.objects.get(user=request.user)
+        properties = Properties.objects.get(char=char)
         study = Study.objects.get(char=char)
         study_process = StudyProcess.objects.get(id=id)
         bag = Bag.objects.get(char=char)
@@ -396,15 +453,17 @@ class StudyProcessDetailView(APIView):
                 study_process.process += 10
         else:
             study_process.process += int(time)
+        study_process.save()
 
         if study_process.process >= study_process.book.duration:
             study.book.add(study_process.book)
+            f_add_properties(properties, study_process.book)
             study.save()
             study_process.delete()
             return Response("Study successful!", status=200)
         study_process_ser = StudyProcessSerializer(study_process)
         return Response(study_process_ser.data, status=200)
-    
+
 
 @permission_classes([permissions.IsAuthenticated])
 class KnowledgeView(APIView):
@@ -419,17 +478,23 @@ class KnowledgeView(APIView):
         try:
             char = Characters.objects.get(user=request.user)
             knowledge = Knowledge.objects.get(char=char)
+            money = Money.objects.get(char=char)
+            properties = Properties.objects.get(char=char)
             menu = Menu.objects.get(id=menu_id)
+
+            if money.dedication - menu.price < 0:
+                return Response('You have not enough dedication', status=400)
+            money.dedication -= menu.price
+            money.save()
             knowledge.menu.add(menu)
             knowledge.save()
 
-            properties = Properties.objects.get(char=char)
             if menu.type == '1':
                 properties.luyen_khi += 1
             elif menu.type == '2':
                 properties.luyen_dan += 1
             properties.save()
-            
+
             return Response("Read successful!", status=200)
         except Exception as e:
             return Response(str(e), status=400)
@@ -441,18 +506,22 @@ def LevelUpView(request):
     r = request.query_params.get('r')
     char = Characters.objects.get(user=request.user)
     properties = Properties.objects.get(char=char)
-    
+
+    if properties.canh_gioi == 7:
+        return Response('Limit canh_gioi', status=400)
+
     if properties.linh_luc < properties.linh_luc_yeu_cau:
         return Response('linh_luc not enough!', status=400)
-    
+
     if properties.may_man > 100:
         rate_1 = 100
-    else: rate_1 = properties.may_man
-    
+    else:
+        rate_1 = properties.may_man
+
     if r:
         rate_2 = int(r)*10
     rate_final = int((rate_1 + rate_2)/2)
-    
+
     num_rand = random.randint(0, 100)
     if num_rand <= rate_final:
         properties.linh_luc = 0
@@ -477,7 +546,7 @@ def LevelUpView(request):
         properties.tuoi_tho -= 10
         properties.save()
         return Response("Level up fail!", status=400)
-    
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -493,7 +562,7 @@ def getRank(request):
         dedication = Money.objects.all().order_by('-dedication')
         page = pagination.paginate_queryset(dedication, request)
         results = MoneySerializer(page, many=True)
-    
+
     elif type == '3':
         tower = Tower.objects.all().order_by('-floor')
         page = pagination.paginate_queryset(tower, request)
@@ -514,20 +583,23 @@ class RelationshipView(APIView):
                 relation = Relationship.objects.get(char1=char_1, char2=char_2)
             except:
                 try:
-                    relation = Relationship.objects.get(char1=char_2, char2=char_1)
+                    relation = Relationship.objects.get(
+                        char1=char_2, char2=char_1)
                 except:
-                    relation = Relationship.objects.create(char1=char_1, char2=char_2)
+                    relation = Relationship.objects.create(
+                        char1=char_1, char2=char_2)
             relation_ser = RelationshipSerializer(relation)
             return Response(relation_ser.data, status=200)
-        
+
         else:
             char = Characters.objects.get(user=request.user)
-            relation = Relationship.objects.filter(Q(char1=char) | Q(char2=char))
+            relation = Relationship.objects.filter(
+                Q(char1=char) | Q(char2=char))
             pagination = PageNumberPagination()
             page = pagination.paginate_queryset(relation, request)
             relation_ser = RelationshipSerializer(page, many=True)
             return pagination.get_paginated_response(relation_ser.data)
-    
+
     def post(self, request):
         partner = request.data.get('partner')
         item_id = request.data.get('item_id')
@@ -542,13 +614,14 @@ class RelationshipView(APIView):
             try:
                 relation = Relationship.objects.get(char1=char_2, char2=char_1)
             except:
-                relation = Relationship.objects.create(char1=char_1, char2=char_2)
+                relation = Relationship.objects.create(
+                    char1=char_1, char2=char_2)
         f_removeItemfromBag(bag, item)
         relation.point += 10
         relation.save()
         relation_ser = RelationshipSerializer(relation)
         return Response(relation_ser.data, status=200)
-    
+
     def delete(self, request):
         partner = request.query_params.get('partner')
         char_1 = Characters.objects.get(user=request.user)
@@ -560,18 +633,19 @@ class RelationshipView(APIView):
             try:
                 relation = Relationship.objects.get(char1=char_2, char2=char_1)
             except:
-                relation = Relationship.objects.create(char1=char_1, char2=char_2)
+                relation = Relationship.objects.create(
+                    char1=char_1, char2=char_2)
         relation.point -= 10
         relation.save()
         relation_ser = RelationshipSerializer(relation)
         return Response(relation_ser.data, status=200)
-        
+
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def restore(request):
     money_spend = request.data.get('money')
-    
+
     char = Characters.objects.get(user=request.user)
     properties = Properties.objects.get(char=char)
     money = Money.objects.get(char=char)

@@ -29,14 +29,6 @@ TYPE_SEED = [
     ('3', 'linh ngư')
 ]
 
-ATTRIBUTE = [
-    ('1', 'Hỏa'),
-    ('2', 'Thủy'),
-    ('3', 'Thổ'),
-    ('4', 'Mộc'),
-    ('5', 'Kim')
-]
-
 PRIZE_TYPE = [
     ('1', 'Item'),
     ('2', 'Menu'),

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import City, Tower
+from .models import City, Tower, Question, QuestionChar
 
 
 class CitySerializer(serializers.ModelSerializer):
@@ -21,3 +21,15 @@ class TowerSerializer(serializers.ModelSerializer):
             "name"  : obj.char.name,
             "appearance": obj.char.appearance.url
         }
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ('id', 'number', 'question', 'answer_1', 'answer_2', 'answer_3')
+
+
+class QuestionCharSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionChar
+        fields = '__all__'

@@ -1,5 +1,5 @@
 from django.db import models
-from xiuxian_moniqi.config import TYPE_ITEM, TYPE_MENU, ATTRIBUTE
+from xiuxian_moniqi.config import TYPE_ITEM, TYPE_MENU
 
 import uuid
 # Create your models here.
@@ -39,9 +39,9 @@ class Book(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
     descripstion = models.TextField(default="")
+    image = models.ImageField(blank=True, default="temp/item.jpg", null=True, upload_to="book")
     level = models.IntegerField(default=1)
     quality = models.IntegerField(default=1)
-    attribute = models.CharField(max_length=10, choices=ATTRIBUTE, default='1')
     properties = models.JSONField(default=dict)
     price = models.IntegerField(default=1)
     duration = models.IntegerField(default=1)

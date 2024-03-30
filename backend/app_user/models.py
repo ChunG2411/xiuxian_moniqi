@@ -61,8 +61,8 @@ class Properties(models.Model):
     tam_tinh = models.IntegerField(default=10, verbose_name="tâm tình")
     suc_khoe = models.IntegerField(default=10, verbose_name="sức khỏe")
 
-    mau_huyet = models.IntegerField(default=100, verbose_name="máu huyết")
-    cong_kich = models.IntegerField(default=10, verbose_name="công kích")
+    mau_huyet = models.IntegerField(default=10, verbose_name="máu huyết")
+    cong_kich = models.IntegerField(default=2, verbose_name="công kích")
     phong_ngu = models.IntegerField(default=1, verbose_name="phòng ngự")
     toc_do = models.IntegerField(default=1, verbose_name="tốc độ")
 
@@ -115,6 +115,7 @@ class Money(models.Model):
     char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Money_characters")
     money = models.IntegerField(default=0)
     dedication = models.IntegerField(default=0)
+    merit = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'tb_money'
