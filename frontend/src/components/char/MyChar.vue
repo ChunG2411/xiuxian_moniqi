@@ -13,7 +13,7 @@ const props = defineProps({
 })
 const char = ref(null)
 const equip = ref(null)
-
+const pet = ref(null)
 
 function getChar() {
     store.loading = true
@@ -55,18 +55,37 @@ function getEquip() {
         })
 }
 
+function getPet() {
+    store.loading = true
+
+    axios.get(`${store.api}/api/pets/own`, store.header)
+        .then(response => {
+            pet.value = response.data
+            store.loading = false
+        })
+        .catch(error => {
+            store.noti = {
+                'title': 'error',
+                'content': error.response.data
+            }
+            store.loading = false
+        })
+}
+
 getChar()
 getEquip()
+getPet()
 
 function reload() {
     getChar()
     getEquip()
+    getPet()
 }
 
 </script>
 
 <template>
-    <div class="align-items-center d-flex flex-column gap-4" v-if="char">
+    <div class="align-items-center d-flex flex-column gap-4" v-if="char && pet">
         <div class="profile-img">
             <img :src="store.api + char.appearance">
         </div>
@@ -157,6 +176,7 @@ function reload() {
                 </div>
                 <div class="item-img-small" v-else>
                 </div>
+
                 <div class="item-img-small" :class="`border-color-${equip.head.quality}`" v-if="equip.head" @click="addCard('item', {
         name: equip.head.name,
         path: equip.head.id,
@@ -166,6 +186,7 @@ function reload() {
                 </div>
                 <div class="item-img-small" v-else>
                 </div>
+
                 <div class="item-img-small" :class="`border-color-${equip.shirt.quality}`" v-if="equip.shirt" @click="addCard('item', {
         name: equip.shirt.name,
         path: equip.shirt.id,
@@ -175,6 +196,7 @@ function reload() {
                 </div>
                 <div class="item-img-small" v-else>
                 </div>
+
                 <div class="item-img-small" :class="`border-color-${equip.trousers.quality}`" v-if="equip.trousers"
                     @click="addCard('item', {
         name: equip.trousers.name,
@@ -182,6 +204,18 @@ function reload() {
         parent: 'char'
     })">
                     <img :src="store.api + equip.trousers.image">
+                </div>
+                <div class="item-img-small" v-else>
+                </div>
+
+                <div class="item-img-small" :class="`border-color-${pet.pet.quality}`" v-if="pet.pet"
+                    @click="addCard('pet', {
+        name: pet.pet.name,
+        path: pet.pet.id,
+        id: char.id,
+        parent: 'my_char'
+    })">
+                    <img :src="store.api + pet.pet.image">
                 </div>
                 <div class="item-img-small" v-else>
                 </div>

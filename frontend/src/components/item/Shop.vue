@@ -17,34 +17,18 @@ const active = ref('1')
 
 function getShop(tab, type = '') {
     store.loading = true
-    if (tab == '1') {
-        axios.get(`${store.api}/api/${props.data.path}/shop?tab=1&type=${type}`, store.header)
-            .then(response => {
-                shop.value = response.data
-                store.loading = false
-            })
-            .catch(error => {
-                store.noti = {
-                    'title': 'error',
-                    'content': error.response.data
-                }
-                store.loading = false
-            })
-    }
-    else {
-        axios.get(`${store.api}/api/${props.data.path}/shop?tab=2&type=${type}`, store.header)
-            .then(response => {
-                shop.value = response.data
-                store.loading = false
-            })
-            .catch(error => {
-                store.noti = {
-                    'title': 'error',
-                    'content': error.response.data
-                }
-                store.loading = false
-            })
-    }
+    axios.get(`${store.api}/api/${props.data.path}/shop?tab=${tab}&type=${type}`, store.header)
+        .then(response => {
+            shop.value = response.data
+            store.loading = false
+        })
+        .catch(error => {
+            store.noti = {
+                'title': 'error',
+                'content': error.response.data
+            }
+            store.loading = false
+        })
 }
 getShop('1')
 

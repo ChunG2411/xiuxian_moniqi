@@ -113,8 +113,11 @@ function reload() {
     <div class="d-flex flex-column gap-2 align-items-center">
         <h5>Bãi săn</h5>
         <p>Dùng 100 linh thạch mua mũi tên</p>
-        <button class="btn btn-primary" type="button" v-if="tool" @click="Start">Chờ con mồi</button>
-        <button class="btn btn-warning" type="button" v-else @click="Fee">Mua</button>
+        <div class="button-group">
+            <button class="btn btn-primary" type="button" v-if="tool" @click="Start">Chờ con mồi</button>
+            <button class="btn btn-warning" type="button" v-else @click="Fee">Mua mũi tên</button>
+            <button class="btn btn-danger" type="button" @click="addCard('pet_shop')">Mua thú</button>
+        </div>
     </div>
 
     <div class="fullboard" v-if="show_board.status">

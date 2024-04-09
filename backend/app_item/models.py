@@ -55,21 +55,11 @@ class Pet(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     name = models.CharField(max_length=100)
     descripstion = models.TextField(default="")
+    image = models.ImageField(blank=True, default="temp/item.jpg", null=True, upload_to="pet")
     quality = models.IntegerField(default=1)
     price = models.IntegerField(default=1)
+    properties = models.JSONField(default=dict)
 
     class Meta:
         db_table = 'tb_pet'
         verbose_name = 'Sủng vật'
-
-
-class Maid(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-    name = models.CharField(max_length=100)
-    descripstion = models.TextField(default="")
-    quality = models.IntegerField(default=1)
-    price = models.IntegerField(default=1)
-
-    class Meta:
-        db_table = 'tb_maid'
-        verbose_name = 'Người hầu'

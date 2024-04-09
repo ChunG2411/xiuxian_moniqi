@@ -11,18 +11,18 @@ from rest_framework.pagination import PageNumberPagination
 from django.core.validators import validate_email
 
 from .models import (
-    User, Characters, Properties,
+    User, Characters, Properties, OwnPet,
     Bag, Equipped, Money, Knowledge,
     Study, StudyProcess,
     Relationship
 )
 from .serializers import (
-    UserRegisterSerializers, CharactersSerializers,
+    UserRegisterSerializers, CharactersSerializers, OwnPetSerializer,
     BagSerializer, MoneySerializer, EquippedSerializer, KnowledgeSerializer,
     StudySerializer, StudyProcessSerializer,
     RelationshipSerializer
 )
-from app_item.models import Item, Menu, Book
+from app_item.models import Item, Menu, Book, Pet
 from app_location.models import Tower
 from app_location.serializers import TowerSerializer
 from xiuxian_moniqi.function import f_add_properties, f_addBooktoBag, f_addItemtoBag, f_remove_properties, f_removeBookfromBag, f_removeItemfromBag
@@ -48,11 +48,11 @@ class RegisterUser(APIView):
 
         if len(password) < 6:
             return Response("Password must be at least 6 characters.", status=400)
-        
+
         password_split = [*password]
         if ord(password_split[0]) not in range(65, 90):
             return Response("The first letter of the password must be capitalized.", status=400)
-        
+
         check_have_number = False
         for i in password_split:
             if ord(i) in range(48, 57):
@@ -450,7 +450,7 @@ class StudyProcessDetailView(APIView):
             item = Item.objects.get(id=item)
             f_removeItemfromBag(bag, item)
             if item.type == '7':
-                study_process.process += 10
+                study_process.process += item.properties['linh_ngo']
         else:
             study_process.process += int(time)
         study_process.save()
@@ -667,3 +667,94 @@ def restore(request):
         'suc_khoe': int(int(money_spend)/500),
         'tam_tinh': int(int(money_spend)/500)
     }, status=200)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class OwnPetView(APIView):
+    def get(self, request):
+        char_id = request.query_params.get('char')
+
+        if char_id:
+            char = Characters.objects.get(id=char_id)
+        else:
+            char = Characters.objects.get(user=request.user)
+
+        own_pet = OwnPet.objects.get(char=char)
+        serializer = OwnPetSerializer(own_pet)
+        return Response(serializer.data, status=200)
+
+    def post(self, request):
+        pet_id = request.data.get('pet')
+        char = Characters.objects.get(user=request.user)
+        money = Money.objects.get(char=char)
+        pet = Pet.objects.get(id=pet_id)
+        own_pet = OwnPet.objects.get(char=char)
+        properties = Properties.objects.get(char=char)
+
+        if own_pet.pet:
+            return Response('Pet already exist', status=400)
+        else:
+            money.money -= pet.price
+            if money.money < 0:
+                return Response('Money not enough', status=400)
+            else:
+                money.save()
+                own_pet.pet = pet
+                own_pet.properties = pet.properties
+                own_pet.save()
+                f_add_properties(properties, pet)
+        return Response('Start raise pet', status=200)
+
+    def patch(self, request):
+        m = request.query_params.get('money')
+        char = Characters.objects.get(user=request.user)
+        money = Money.objects.get(char=char)
+        own_pet = OwnPet.objects.get(char=char)
+
+        money.money -= int(m)
+        if money.money < 0:
+            return Response('Money not enough', status=400)
+        money.save()
+
+        own_pet.exp += int(m)
+        if own_pet.exp > own_pet.pet.price * own_pet.pet.quality * (own_pet.level + 1):
+            own_pet.exp = own_pet.pet.price * own_pet.pet.quality * (own_pet.level + 1)
+        own_pet.save()
+        return Response('Feed successful', status=200)
+
+    def put(self, request):
+        char = Characters.objects.get(user=request.user)
+        own_pet = OwnPet.objects.get(char=char)
+        properties = Properties.objects.get(char=char)
+
+        if own_pet.level == 10:
+            return Response('Limit level', status=400)
+        
+        if own_pet.exp == own_pet.pet.price * own_pet.pet.quality * (own_pet.level + 1):
+            own_pet.level += 1
+            own_pet.exp = 0
+            own_pet.properties['cong_kich'] *= 2
+            own_pet.properties['phong_ngu'] *= 2
+            own_pet.save()
+            properties.cong_kich += own_pet.properties['cong_kich']
+            properties.phong_ngu += own_pet.properties['phong_ngu']
+            properties.save()
+
+            return Response('Up level pet successfull', status=200)
+        else:
+            return Response('Exp not enough', status=400)
+    
+    def delete(self, request):
+        char = Characters.objects.get(user=request.user)
+        own_pet = OwnPet.objects.get(char=char)
+        properties = Properties.objects.get(char=char)
+
+        f_remove_properties(properties, own_pet)
+        own_pet.pet = None
+        own_pet.level = 1
+        own_pet.exp = 0
+        own_pet.properties = {}
+        own_pet.save()
+
+        return Response('Remove successful', status=200)
+

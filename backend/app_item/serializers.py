@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Item, Menu, Book, Pet, Maid
+from .models import Item, Menu, Book, Pet
 
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,10 +44,4 @@ class BookSerializer(serializers.ModelSerializer):
 class PetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pet
-        fields = '__all__'
-
-
-class MaidSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Maid
         fields = '__all__'

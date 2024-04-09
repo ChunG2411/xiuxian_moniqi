@@ -20,6 +20,7 @@ const title = {
     'shop': 'Cửa hàng:',
     'seed': 'Giống:',
     'menu': 'Công thức:',
+    'pet': 'Sủng vật:',
     'create_item': 'Luyện chế',
 
     'clan': 'Môn phái',
@@ -41,6 +42,7 @@ const title = {
     'question': 'Trắc nghiệm',
     'fishing': 'Hồ câu',
     'hunt': 'Bãi săn',
+    'pet_shop': 'Cửa hàng sủng vật',
 
     'job': 'Nghề nghiệp',
     'house': 'Động phủ',

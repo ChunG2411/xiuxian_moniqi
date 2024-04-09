@@ -2,23 +2,21 @@ from django.urls import path
 
 from app_user.views import (
     RegisterUser, LoginView, LogoutView,
-    CharactersView, getCurrChar,
-    getBag,
-    MoneyView,
-    EquippedView,
+    CharactersView, getCurrChar, getBag, MoneyView, EquippedView, LevelUpView,
     useItem, buyItem, sellItem,
     KnowledgeView,
-    LevelUpView,
     buyBook, sellBook, StudyView, StudyProcessView, StudyProcessDetailView,
     getRank,
     RelationshipView,
-    restore
+    restore,
+    OwnPetView
 )
 from app_item.views import (
     ItemView, ItemDetailView, getRandomItem,
     addItemtoBag, removeItemfromBag, removeBookfromBag, addBooktoBag,
     MenuView, MenuDetailView, createItem,
-    BookView, BookDetailView, getRandomBook
+    BookView, BookDetailView, getRandomBook,
+    PetView, PetDetailView
 )
 from app_clan.views import (
     ClanView, ClanDetailView, outClan, MemberClanView,
@@ -85,6 +83,10 @@ urlpatterns = [
 
     path('equipped', EquippedView.as_view(), name="EquippedView"),
 
+    path('pets', PetView.as_view(), name="PetView"),
+    path('pets/own', OwnPetView.as_view(), name="OwnPetView"),
+    path('pet/<str:id>', PetDetailView.as_view(), name="PetDetailView"),
+
     path('clan', ClanView.as_view(), name="ClanView"),
     path('clan/<str:id>', ClanDetailView.as_view(), name="ClanDetailView"),
     path('clan/<str:id>/member', MemberClanView.as_view(), name="MemberClanView"),
@@ -137,7 +139,6 @@ urlpatterns = [
     path('tower', TowerView.as_view(), name="TowerView"),
     path('fight', FightResult, name="FightResult"),
     path('game', GameResult, name="GameResult"),
-
     path('question', QuestionView.as_view(), name="QuestionView"),
     path('question/current', QuestionCharView.as_view(), name="QuestionCharView"),
 

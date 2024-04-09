@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import (
     User, Characters, Properties, Title,
     Bag, Equipped, Money, Knowledge, Study, Relationship, StudyProcess,
-    OwnPet, OwnMaid
+    OwnPet
 )
 from app_item.models import Item, Book, Menu
 from app_item.serializers import ItemSerializer, BookSerializer, PetSerializer, MenuSerializer
@@ -52,7 +52,6 @@ class CharactersSerializers(serializers.ModelSerializer):
         Study.objects.create(char=char)
         StudyProcess.objects.create(char=char)
         OwnPet.objects.create(char=char)
-        OwnMaid.objects.create(char=char)
 
         return char
 
@@ -80,7 +79,7 @@ class CharactersSerializers(serializers.ModelSerializer):
         for i in obj.title.all():
             results.append(i.name)
         return results
-
+    
 
 class PropertiesSerializer(serializers.ModelSerializer):
     class Meta:
@@ -202,17 +201,6 @@ class OwnPetSerializer(serializers.ModelSerializer):
 
     def get_pet(self, obj):
         return PetSerializer(obj.pet).data if obj.pet else ""
-
-
-class OwnMaidSerializer(serializers.ModelSerializer):
-    maid = serializers.SerializerMethodField()
-
-    class Meta:
-        model = OwnMaid
-        fields = '__all__'
-
-    def get_maid(self, obj):
-        return PetSerializer(obj.maid).data if obj.maid else ""
     
 
 class RelationshipSerializer(serializers.ModelSerializer):

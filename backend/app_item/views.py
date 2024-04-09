@@ -4,8 +4,8 @@ from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 
-from .models import Item, Menu, Book
-from .serializers import ItemSerializer, MenuSerializer, BookSerializer
+from .models import Item, Menu, Book, Pet
+from .serializers import ItemSerializer, MenuSerializer, BookSerializer, PetSerializer
 from app_user.models import Bag, Characters, Properties, Equipped
 from app_job.models import Oven
 from xiuxian_moniqi.function import f_addBooktoBag, f_getRandomBook, f_remove_properties, f_removeBookfromBag, f_removeItemfromBag, f_addItemtoBag, f_getRandomItem, f_getListItem, f_getListBook
@@ -291,3 +291,28 @@ def createItem(request):
         
     except Exception as e:
         return Response(str(e), status=400)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class PetView(APIView):
+    def get(self, request):
+        pets = Pet.objects.all()
+        serializer = PetSerializer(pets, many=True)
+        return Response(serializer.data, status=200)
+    
+    def post(self, request):
+        serializer = PetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        else:
+            return Response(serializer.errors, status=400)
+    
+
+@permission_classes([permissions.IsAuthenticated])
+class PetDetailView(APIView):
+    def get(self, request, id):
+        pet = Pet.objects.get(id=id)
+        serializer = PetSerializer(pet)
+        return Response(serializer.data, status=200)
+    

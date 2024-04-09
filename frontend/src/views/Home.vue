@@ -22,6 +22,7 @@ import Shop from '../components/item/Shop.vue'
 import Seed from '../components/item/Seed.vue'
 import Menu from '../components/item/Menu.vue'
 import Create from '../components/item/Create.vue'
+import Pet from '../components/item/Pet.vue'
 
 import MyClan from '../components/clan/MyClan.vue'
 import ClanList from '../components/clan/ClanList.vue'
@@ -42,6 +43,7 @@ import Rank from '../components/location/Rank.vue'
 import Question from '../components/location/Question.vue'
 import Fishing from '../components/location/Fishing.vue'
 import Hunt from '../components/location/Hunt.vue'
+import ShopPet from '../components/location/Shop.vue'
 
 import Job from '../components/job/Job.vue'
 import House from '../components/job/House.vue'
@@ -82,6 +84,7 @@ addCard('mychar')
             <Shop :data="i.data" v-if="i.body == 'shop'"></Shop>
             <Seed :data="i.data" v-if="i.body == 'seed'"></Seed>
             <Menu :data="i.data" v-if="i.body == 'menu'"></Menu>
+            <Pet :data="i.data" v-if="i.body == 'pet'"></Pet>
             <Create :data="i.data" v-if="i.body == 'create_item'"></Create>
 
             <MyClan :data="i.data" v-if="i.body == 'clan'"></MyClan>
@@ -103,6 +106,7 @@ addCard('mychar')
             <Question :data="i.data" v-if="i.body == 'question'"></Question>
             <Fishing :data="i.data" v-if="i.body == 'fishing'"></Fishing>
             <Hunt :data="i.data" v-if="i.body == 'hunt'"></Hunt>
+            <ShopPet :data="i.data" v-if="i.body == 'pet_shop'"></ShopPet>
 
             <Job :data="i.data" v-if="i.body == 'job'"></Job>
             <House :data="i.data" v-if="i.body == 'house'"></House>

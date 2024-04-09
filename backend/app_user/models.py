@@ -4,7 +4,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 
 from .managers import CustomUserManager
 from xiuxian_moniqi.config import GENDER
-from app_item.models import Item, Menu, Book, Pet, Maid
+from app_item.models import Item, Menu, Book, Pet
 
 import uuid
 
@@ -147,21 +147,11 @@ class OwnPet(models.Model):
     pet = models.ForeignKey(Pet, null=True, on_delete=models.CASCADE, related_name="OwnPet_pet")
     level = models.IntegerField(default=1)
     exp = models.IntegerField(default=0)
+    properties = models.JSONField(default=dict)
 
     class Meta:
         db_table = 'tb_own_pet'
         verbose_name = 'Nuôi thú'
-
-
-class OwnMaid(models.Model):
-    char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="OwnMaid_char")
-    maid = models.ForeignKey(Maid, null=True, on_delete=models.CASCADE, related_name="OwnMaid_maid")
-    level = models.IntegerField(default=1)
-    exp = models.IntegerField(default=0)
-
-    class Meta:
-        db_table = 'tb_own_maid'
-        verbose_name = 'Nuôi người hầu'
 
 
 class Relationship(models.Model):
