@@ -126,7 +126,7 @@ function loadMore(path) {
                     <div class="progress-custom">
                         <div class="progress-bar-custom" :style="`width: ${(i.process / i.book.duration) * 100}%`">
                         </div>
-                        <small>{{ (i.process / i.book.duration) * 100 }} %</small>
+                        <small>{{ (i.process / i.book.duration * 100).toFixed(2) }} %</small>
                     </div>
                     <div class="icon-normal" @click="addCard('process', {
         name: i.book.name,

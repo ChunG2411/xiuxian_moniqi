@@ -42,6 +42,7 @@ const title = {
     'question': 'Trắc nghiệm',
     'fishing': 'Hồ câu',
     'hunt': 'Bãi săn',
+    'casino': 'Giải trí',
     'pet_shop': 'Cửa hàng sủng vật',
 
     'job': 'Nghề nghiệp',

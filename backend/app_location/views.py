@@ -279,6 +279,11 @@ def GameResult(request):
 
 @permission_classes([permissions.IsAuthenticated])
 class QuestionView(APIView):
+    def get(self, request):
+        question = Question.objects.all()
+        serializer = QuestionSerializer(question, many=True)
+        return Response(serializer.data, status=200)
+
     def post(self, request):
         serializer = QuestionSerializer(data=request.data)
         if serializer.is_valid():
@@ -300,8 +305,6 @@ class QuestionCharView(APIView):
         try:
             question = Question.objects.get(number=question_char.question + 1)
         except:
-            question_char.question += 1
-            question_char.save()
             return Response('End', status=400)
         serializer = QuestionSerializer(question)
         return Response(serializer.data, status=200)

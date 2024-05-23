@@ -118,9 +118,9 @@ async function showBoard() {
         <div class="text-center d-flex flex-column gap-3 w-100 align-items-center">
             <h5>Quá trình lĩnh ngộ</h5>
             <div class="progress-custom">
-                <div class="progress-bar-custom" :style="`width: ${(process.process / process.book.duration) * 100}%`">
+                <div class="progress-bar-custom" :style="`width: ${ (process.process / process.book.duration * 100).toFixed(2) }%`">
                 </div>
-                <small>{{ (process.process / process.book.duration) * 100 }} %</small>
+                <small>{{ (process.process / process.book.duration * 100).toFixed(2) }} %</small>
             </div>
         </div>
         <div class="button-group">

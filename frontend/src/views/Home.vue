@@ -43,6 +43,7 @@ import Rank from '../components/location/Rank.vue'
 import Question from '../components/location/Question.vue'
 import Fishing from '../components/location/Fishing.vue'
 import Hunt from '../components/location/Hunt.vue'
+import Casino from '../components/location/Casino.vue'
 import ShopPet from '../components/location/Shop.vue'
 
 import Job from '../components/job/Job.vue'
@@ -57,7 +58,7 @@ import ShopHouse from '../components/job/Shop.vue'
 
 const store = Store()
 
-addCard('mychar')
+// addCard('mychar')
 
 </script>
 
@@ -106,6 +107,7 @@ addCard('mychar')
             <Question :data="i.data" v-if="i.body == 'question'"></Question>
             <Fishing :data="i.data" v-if="i.body == 'fishing'"></Fishing>
             <Hunt :data="i.data" v-if="i.body == 'hunt'"></Hunt>
+            <Casino :data="i.data" v-if="i.body == 'casino'"></Casino>
             <ShopPet :data="i.data" v-if="i.body == 'pet_shop'"></ShopPet>
 
             <Job :data="i.data" v-if="i.body == 'job'"></Job>

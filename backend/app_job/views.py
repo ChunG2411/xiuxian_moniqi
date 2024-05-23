@@ -267,7 +267,7 @@ class HarvestSeedView(APIView):
         if not slot.seed:
             slot.seed = seed
             slot.end_time = datetime.now(
-                timezone.utc) + timedelta(minutes=int(seed.time))
+                timezone.get_current_timezone()) + timedelta(minutes=int(seed.time))
             slot.save()
             f_removeSeedtoStore(house, seed)
             return Response(GardentSlotSerializer(slot).data, status=200)
@@ -405,7 +405,7 @@ class SlaughterSeedView(APIView):
         if not slot.seed:
             slot.seed = seed
             slot.end_time = datetime.now(
-                timezone.utc) + timedelta(minutes=int(seed.time))
+                timezone.get_current_timezone()) + timedelta(minutes=int(seed.time))
             slot.save()
             f_removeSeedtoStore(house, seed)
             return Response(CageSlotSerializer(slot).data, status=200)
@@ -543,7 +543,7 @@ class FishingSeedView(APIView):
         if not slot.seed:
             slot.seed = seed
             slot.end_time = datetime.now(
-                timezone.utc) + timedelta(minutes=int(seed.time))
+                timezone.get_current_timezone()) + timedelta(minutes=int(seed.time))
             slot.save()
             f_removeSeedtoStore(house, seed)
             return Response(LakeSlotSerializer(slot).data, status=200)
@@ -628,9 +628,9 @@ def Meditation(request):
 
 @api_view(['GET'])
 def getCurTime(request):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.get_current_timezone())
     start_time = datetime.strptime(
-        START_TIME, "%d-%m-%Y %H:%M:%S").replace(tzinfo=timezone.utc)
+        START_TIME, "%d-%m-%Y %H:%M:%S").replace(tzinfo=timezone.get_current_timezone())
     duration = now - start_time
 
     return Response({

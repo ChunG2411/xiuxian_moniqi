@@ -273,7 +273,7 @@ function logout() {
     height: 0px;
     border: 10px solid;
     border-color: transparent var(--card_color) transparent transparent;
-    left: -20px;
+    left: -17px;
     top: 10px;
 }
 

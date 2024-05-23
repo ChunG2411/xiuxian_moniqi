@@ -35,7 +35,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
-    'daphne',
+    # 'daphne',
     'corsheaders',
 
     "django.contrib.admin",
