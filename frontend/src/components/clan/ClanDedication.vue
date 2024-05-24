@@ -57,7 +57,7 @@ function send() {
             <h5>Cống hiến tinh thạch</h5>
             <div class="d-flex flex-column gap-1 align-items-center">
                 <input type="text" placeholder="Nhập số tinh thạch" v-model="money">
-                <button type="button" @click="send">Gửi</button>
+                <button type="button" class="btn btn-success" @click="send">Gửi</button>
             </div>
         </div>
         <div class="create-clan">

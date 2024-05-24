@@ -2,6 +2,7 @@ from django.db import models
 from xiuxian_moniqi.config import TYPE_ITEM, TYPE_MENU
 
 import uuid
+
 # Create your models here.
 
 

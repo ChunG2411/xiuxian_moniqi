@@ -73,7 +73,7 @@ function reload() {
                     <td>{{ clan.name }}</td>
                 </tr>
                 <tr>
-                    <th>Mô tả</th>
+                    <th>Giới thiệu</th>
                     <td>{{ clan.descripstion }}</td>
                 </tr>
                 <tr>

@@ -31,6 +31,7 @@ import ClanMember from '../components/clan/ClanMember.vue'
 import ClanRequest from '../components/clan/ClanRequest.vue'
 import ClanDedication from '../components/clan/ClanDedication.vue'
 import ClanLibrary from '../components/clan/ClanLibrary.vue'
+import ClanModify from '../components/clan/ClanModify.vue'
 
 import CityList from '../components/city/CityList.vue'
 import CityDetail from '../components/city/CityDetail.vue'
@@ -95,6 +96,7 @@ const store = Store()
             <ClanRequest :data="i.data" v-if="i.body == 'request_clan'"></ClanRequest>
             <ClanDedication :data="i.data" v-if="i.body == 'dedication'"></ClanDedication>
             <ClanLibrary :data="i.data" v-if="i.body == 'library'"></ClanLibrary>
+            <ClanModify :data="i.data" v-if="i.body == 'clan_modify'"></ClanModify>
 
             <CityList :data="i.data" v-if="i.body == 'city'"></CityList>
             <CityDetail :data="i.data" v-if="i.body == 'city_detail'"></CityDetail>

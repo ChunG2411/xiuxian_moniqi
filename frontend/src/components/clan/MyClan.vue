@@ -144,8 +144,12 @@ function reload() {
                     <td>{{ clan.name }}</td>
                 </tr>
                 <tr>
-                    <th>Mô tả</th>
-                    <td>{{ clan.descripstion }}</td>
+                    <th>Giới thiệu</th>
+                    <td>{{ clan.description }}</td>
+                </tr>
+                <tr>
+                    <th>Thông báo</th>
+                    <td>{{ clan.notification }}</td>
                 </tr>
                 <tr>
                     <th>Nhân sĩ</th>
@@ -194,6 +198,10 @@ function reload() {
     })">Cửa hàng</button>
         </div>
         <div class="button-group">
+            <button type="button" class="btn btn-outline-warning" v-if="clan.position == 0" @click="addCard('clan_modify', {
+        name: clan.name,
+        path: clan.id
+    })">Chỉnh sửa</button>
             <button type="button" class="btn btn-secondary" @click="addCard('clan_list')">Môn phái khác</button>
             <button type="button" class="btn btn-dark" @click="outClan">Rời phái</button>
         </div>
@@ -208,7 +216,7 @@ function reload() {
             <small>Tạo môn phái với 100.000 linh thạch</small>
             <div class="d-flex flex-column gap-1 align-items-center">
                 <input type="text" placeholder="Tên môn phái" v-model="clan_name">
-                <button type="button" @click="createClan">Tạo</button>
+                <button type="button" class="btn btn-primary" @click="createClan">Tạo</button>
             </div>
         </div>
     </div>

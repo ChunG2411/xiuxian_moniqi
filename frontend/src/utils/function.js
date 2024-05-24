@@ -1,6 +1,6 @@
 import { useRouter } from 'vue-router'
 import Store from '../utils/store.js'
-import { title, level, type, properties, quality, position_clan, position_organ, seed } from '../utils/variables.js'
+import { title, level, type, properties, quality, position_clan, seed } from '../utils/variables.js'
 
 
 const CheckLogin = () => {
@@ -47,10 +47,6 @@ const getPositionClan = (num) => {
     return position_clan[num]
 }
 
-const getPositionOrgan = (num) => {
-    return position_organ[num]
-}
-
 const getSeedType = (num) => {
     return seed[num]
 }
@@ -58,5 +54,5 @@ const getSeedType = (num) => {
 export {
     CheckLogin,
     addCard, resetCard,
-    getLevel, getType, getProperties, getQuality, getPositionClan, getPositionOrgan, getSeedType
+    getLevel, getType, getProperties, getQuality, getPositionClan, getSeedType
 }

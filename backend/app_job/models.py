@@ -5,6 +5,7 @@ from app_item.models import Item
 from xiuxian_moniqi.config import TYPE_SEED
 
 import uuid
+
 # Create your models here.
 
 

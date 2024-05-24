@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'app_item',
     'app_clan',
     'app_job',
-    'app_location'
+    'app_location',
+    'app_organization'
 ]
 
 MIDDLEWARE = [

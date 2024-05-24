@@ -4,8 +4,8 @@ from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 
-from .serializers import ClanSerializer, RequestClanSerializer, OrganizationSerializer, ClanPositionSerializer
-from .models import Clan, ClanPosition, RequestClan, Organization, OrganizationPosition
+from .serializers import ClanSerializer, RequestClanSerializer, ClanPositionSerializer
+from .models import Clan, ClanPosition, RequestClan
 from app_user.models import Characters, Money, Bag
 from app_item.models import Item, Book
 from app_item.serializers import ItemSerializer, BookSerializer
@@ -56,6 +56,46 @@ class ClanDetailView(APIView):
             clan = Clan.objects.get(id=id)
             clan_ser = ClanSerializer(clan)
             return Response(clan_ser.data, status=200)
+    
+    def put(self, request, id):
+        name = request.data.get('name')
+        description = request.data.get('description')
+        image = request.data.get('image')
+        notification = request.data.get('notification')
+        leader = request.data.get('leader')
+
+        if id == 'current':
+            my_char = Characters.objects.get(user=request.user)
+            my_position = ClanPosition.objects.get(char=my_char)
+            clan = my_position.clan
+        else:
+            return Response("Incorrect", status=400)
+
+        if my_position.position != 0:
+            return Response("You don't have permission", status=400)
+        
+        if name:
+            clan.name = name
+        if description != None:
+            clan.description = description
+        if image != None:
+            clan.image = image
+        if notification != None:
+            clan.notification = notification
+        if leader:
+            try:
+                char = Characters.objects.get(id=leader)
+                position = ClanPosition.objects.get(char=char, clan=clan)
+                my_position.position = 1
+                position.position = 0
+                clan.leader = char
+                position.save()
+                my_position.save()
+            except:
+                return Response("Incorrect infor leader", status=400)
+        clan.save()
+
+        return Response("Modify successful", status=200)
     
     def delete(self, request, id):
         try:
@@ -254,8 +294,12 @@ def upPosition_Clan(request, id):
 @permission_classes([permissions.IsAuthenticated])
 class MemberClanView(APIView):
     def get(self, request, id):
+        all = request.query_params.get('all')
+
         clan = Clan.objects.get(id=id)
         position = ClanPosition.objects.filter(clan=clan)
+        if not all == None:
+            return Response(ClanPositionSerializer(position, many=True).data, status=200)
         pagination = PageNumberPagination()
         page = pagination.paginate_queryset(position, request)
         serializer = ClanPositionSerializer(page, many=True)
@@ -327,89 +371,3 @@ class ClanShopView(APIView):
             money.save()
         return Response("Buy successful!", status=200)
         
-
-@permission_classes([permissions.IsAuthenticated])
-class OrganizationView(APIView):
-    def get(self, request):
-        organization = Organization.objects.all()
-        pagination = PageNumberPagination()
-        page = pagination.paginate_queryset(organization, request)
-        organization_ser = OrganizationSerializer(page, many=True)
-        return pagination.get_paginated_response(organization_ser.data)
-    
-    def post(self, request):
-        organization_ser = OrganizationSerializer(context={"request": request}, data=request.data)
-        if organization_ser.is_valid():
-            organization_ser.save()
-            return Response(organization_ser.data, status=200)
-        else:
-            return Response(organization_ser.errors, status=400)
-    
-
-@permission_classes([permissions.IsAuthenticated])
-class OrganizationDetailView(APIView):
-    def get(self, request, id):
-        try:
-            organization = Organization.objects.get(id=id)
-            organization_ser = OrganizationSerializer(organization)
-            return Response(organization_ser.data, status=200)
-        except Exception as e:
-            return Response(str(e), status=400)
-    
-    def delete(self, request, id):
-        try:
-            Organization.objects.get(id=id).delete()
-            return Response("Delete successful!", status=200)
-        except Exception as e:
-            return Response(str(e), status=400)
-        
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def joinOrganization(request, id):
-    try:
-        organization = Organization.objects.get(id=id)
-        char = Characters.objects.get(user=request.user)
-        OrganizationPosition.objects.create(char=char, organization=organization)
-        organization.member += 1
-        organization.save()
-        return Response("Join organization successful!", status=200)
-
-    except Exception as e:
-        return Response(str(e), status=400)
-    
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def outOrganization(request, id):
-    try:
-        organization = Organization.objects.get(id=id)
-        char = Characters.objects.get(user=request.user)
-        organization_position = OrganizationPosition.objects.get(char=char)
-        if organization_position.organization == organization:
-            organization_position.delete()
-            organization.member -= 1
-            organization.save()
-            return Response("Out organization successful!", status=200)
-        else:
-            return Response("Isn't member of this organization", status=400)
-    except Exception as e:
-        return Response(str(e), status=400)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def upPosition_Organization(request, id):
-    char = Characters.objects.get(user=request.user)
-    organization = Organization.objects.get(id=id)
-    position = OrganizationPosition.objects.get(char=char, organization=organization)
-    money = Money.objects.get(char=char)
-    
-    if money.merit >=  position.position*10000:
-        money.merit -= position.position*10000
-        money.save()
-        position.position += 1
-        position.save()
-        return Response("Up position successful!", status=200)
-    else:
-        return Response("Merit not enough!", status=400)

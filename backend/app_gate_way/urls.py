@@ -22,9 +22,13 @@ from app_clan.views import (
     ClanView, ClanDetailView, outClan, MemberClanView,
     RequestClanView, acceptRequest, rejectRequest,
     DedicationView, upClan, upPosition_Clan,
-    ClanShopView,
+    ClanShopView
+)
+from app_organization.views import (
     OrganizationView, OrganizationDetailView,
-    joinOrganization, outOrganization, upPosition_Organization
+    joinOrganization, outOrganization,
+    LocalityView, LocalityDetailView,
+    MineView, MarketView
 )
 from app_job.views import (
     HouseView, StoreView, OvenView,
@@ -41,6 +45,7 @@ from app_location.views import (
     FightResult, GameResult,
     QuestionView, QuestionCharView
 )
+
 
 urlpatterns = [
     path('register', RegisterUser.as_view(), name="RegisterUser"),
@@ -103,7 +108,13 @@ urlpatterns = [
     path('organization/<str:id>', OrganizationDetailView.as_view(), name="OrganizationDetailView"),
     path('organization/<str:id>/join', joinOrganization, name="joinOrganization"),
     path('organization/<str:id>/out', outOrganization, name="outOrganization"),
-    path('organization/<str:id>/up-positon', upPosition_Organization, name="upPosition_Organization"),
+
+    path('locality', LocalityView.as_view(), name="LocalityView"),
+    path('locality/<str:id>', LocalityDetailView.as_view(), name="LocalityDetailView"),
+    path('mine', MineView.as_view(), name="MineView"),
+    path('mine/<str:id>', MineView.as_view(), name="MineView"),
+    path('market', MarketView.as_view(), name="MarketView"),
+    path('market/<str:id>', MarketView.as_view(), name="MarketView"),
 
     path('menu', MenuView.as_view(), name="MenuView"),
     path('menu/<str:id>', MenuDetailView.as_view(), name="MenuDetailView"),

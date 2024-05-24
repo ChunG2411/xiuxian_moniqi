@@ -5,10 +5,10 @@ from .models import (
     Bag, Equipped, Money, Knowledge, Study, Relationship, StudyProcess,
     OwnPet
 )
-from app_item.models import Item, Book, Menu
+from app_item.models import Item, Book
 from app_item.serializers import ItemSerializer, BookSerializer, PetSerializer, MenuSerializer
-from app_clan.models import ClanPosition, OrganizationPosition
-from app_clan.serializers import ClanPositionSerializer, OrganizationPositionSerializer
+from app_clan.models import ClanPosition
+from app_organization.models import Locality
 
 
 class UserRegisterSerializers(serializers.ModelSerializer):
@@ -63,14 +63,21 @@ class CharactersSerializers(serializers.ModelSerializer):
     def get_clan(self, obj):
         try:
             clan_position = ClanPosition.objects.get(char=obj)
-            return ClanPositionSerializer(clan_position).data
+            return {
+                'id': str(clan_position.clan.id),
+                'name': clan_position.clan.name,
+                'position': clan_position.position
+            }
         except:
             return ''
 
     def get_organization(self, obj):
         try:
-            organization_position = OrganizationPosition.objects.get(char=obj)
-            return OrganizationPositionSerializer(organization_position).data
+            locality = Locality.objects.get(char=obj)
+            return {
+                'id': str(locality.organization.id),
+                'name': locality.organization.name
+            }
         except:
             return ''
 

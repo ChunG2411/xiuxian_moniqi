@@ -3,7 +3,7 @@ import { defineProps, ref, reactive } from 'vue'
 import axios from 'axios'
 
 import Store from '../../utils/store.js'
-import { addCard, resetCard, getLevel, getPositionClan, getPositionOrgan } from '../../utils/function.js'
+import { addCard, resetCard, getLevel, getPositionClan } from '../../utils/function.js'
 
 
 const store = Store()
@@ -101,15 +101,13 @@ function reload() {
                 </tr>
                 <tr>
                     <th>Tông phái</th>
-                    <td v-if="char.clan">{{ getPositionClan(char.clan.position) }} {{ char.clan.clan.name }}</td>
+                    <td v-if="char.clan">{{ getPositionClan(char.clan.position) }} {{ char.clan.name }}</td>
                     <td v-else>Không có</td>
                 </tr>
                 <tr>
                     <th>Thế lực</th>
-                    <td v-if="char.organization">{{ getPositionOrgan(char.organization.position) }} {{
-        char.organization.organization.name
-    }}</td>
-                    <td v-else>Không có</td>
+                    <td v-if="char.organization">{{ char.organization.name }}</td>
+                    <td v-else>'Không có'</td>
                 </tr>
                 <tr>
                     <th>Cảnh giới</th>

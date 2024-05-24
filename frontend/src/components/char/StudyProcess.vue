@@ -138,7 +138,7 @@ async function showBoard() {
     <div class="fullboard" v-if="show_board">
         <h5>Thời gian</h5>
         <h5>{{ count }}</h5>
-        <button type="button" @click="study">Dừng</button>
+        <button type="button" class="btn btn-warning" @click="study">Dừng</button>
     </div>
 
     <div class="reload">

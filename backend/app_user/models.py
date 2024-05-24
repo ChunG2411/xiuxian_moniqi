@@ -115,7 +115,6 @@ class Money(models.Model):
     char = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Money_characters")
     money = models.IntegerField(default=0)
     dedication = models.IntegerField(default=0)
-    merit = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'tb_money'

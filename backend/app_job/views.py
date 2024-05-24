@@ -17,8 +17,6 @@ from .serializers import (
     CageSerializer, CageSlotSerializer,
     LakeSerializer, LakeSlotSerializer
 )
-from app_item.models import Item
-from app_item.serializers import ItemSerializer
 from app_user.models import Bag, Characters, Properties, Money
 from xiuxian_moniqi.config import START_TIME
 from xiuxian_moniqi.function import f_addItemtoBag, f_addSeedtoStore, f_removeSeedtoStore

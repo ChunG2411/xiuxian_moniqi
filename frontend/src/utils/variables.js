@@ -30,6 +30,7 @@ const title = {
     'request_clan': 'Yêu cầu',
     'dedication': 'Cống hiến',
     'library': 'Tàng kinh các',
+    'clan_modify': 'Chỉnh sửa:',
 
     'city': 'Thành trấn',
     'city_detail': 'Thành trấn:',
@@ -120,20 +121,10 @@ const position_clan = {
     '9': 'Lão tổ'
 }
 
-const position_organ = {
-    '1': 'Tạp dịch',
-    '2': 'Binh lính',
-    '3': 'Hiệu úy',
-    '4': 'Đô thống',
-    '5': 'Tiên phong',
-    '6': 'Tướng quân',
-    '7': 'Nguyên soái'
-}
-
 const seed = {
     '1': 'Linh thảo',
     '2': 'Linh thú',
     '3': 'Linh ngư'
 }
 
-export { title, level, quality, type, properties, position_clan, position_organ, seed}
+export { title, level, quality, type, properties, position_clan, seed}

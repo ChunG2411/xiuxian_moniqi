@@ -73,6 +73,10 @@ h6 {
   margin: 0;
 }
 
+td {
+  font-size: 15px;
+}
+
 /* ----------------icon----------------- */
 .icon-small {
   width: 25px;

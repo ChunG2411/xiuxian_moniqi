@@ -1,9 +1,6 @@
 from rest_framework import serializers
 
-from .models import (
-    Clan, ClanPosition, RequestClan,
-    Organization, OrganizationPosition
-)
+from .models import Clan, ClanPosition, RequestClan
 from app_user.models import Characters
 
 
@@ -71,33 +68,3 @@ class RequestClanSerializer(serializers.ModelSerializer):
             'name': obj.char.name,
             'appearance': obj.char.appearance.url
         }
-
-
-class OrganizationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Organization
-        fields = '__all__'
-
-    def create(self, validated_data):
-        request = self.context.get('request')
-        organization = Organization(**validated_data)
-        organization.save()
-        try:
-            char = Characters.objects.get(user=request.user)
-            OrganizationPosition.objects.create(
-                char=char, organization=organization, position=0)
-        except Exception as e:
-            organization.delete()
-            return serializers.ValidationError(str(e))
-        return organization
-
-
-class OrganizationPositionSerializer(serializers.ModelSerializer):
-    organization = serializers.SerializerMethodField()
-
-    class Meta:
-        model = OrganizationPosition
-        fields = '__all__'
-
-    def get_organization(self, obj):
-        return OrganizationSerializer(obj.organization).data
