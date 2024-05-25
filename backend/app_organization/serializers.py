@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone
 
-from .models import Organization, Locality, Mine, Market
+from .models import Organization, Locality, Mine, Market, Mail
 from app_user.models import Characters
 
 import random
@@ -30,8 +30,8 @@ class LocalitySerializer(serializers.ModelSerializer):
         validated_data['pos_x'] = random.randint(0, 1000)
         validated_data['pos_y'] = random.randint(0, 1000)
         locality = Locality(**validated_data)
+        locality.name = char.name
         locality.save()
-
         return locality
     
     def get_organization(self, obj):
@@ -60,14 +60,14 @@ class MineSerializer(serializers.ModelSerializer):
         validated_data['pos_x'] = random.randint(0, 1000)
         validated_data['pos_y'] = random.randint(0, 1000)
         mine = Mine(**validated_data)
+        mine.get_at = datetime.now(timezone.get_current_timezone())
         mine.save()
         return mine
     
     def get_owner(self, obj):
         return {
             'id': str(obj.owner.id),
-            'name': obj.owner.char.name,
-            'appearance': obj.owner.char.appearance.url
+            'name': obj.owner.name
         } if obj.owner else ''
 
     def get_store(self, obj):
@@ -96,14 +96,14 @@ class MarketSerializer(serializers.ModelSerializer):
         validated_data['pos_x'] = random.randint(0, 1000)
         validated_data['pos_y'] = random.randint(0, 1000)
         market = Market(**validated_data)
+        market.get_at = datetime.now(timezone.get_current_timezone())
         market.save()
         return market
     
     def get_owner(self, obj):
         return {
             'id': str(obj.owner.id),
-            'name': obj.owner.char.name,
-            'appearance': obj.owner.char.appearance.url
+            'name': obj.owner.name
         } if obj.owner else ''
 
     def get_store(self, obj):
@@ -118,3 +118,26 @@ class MarketSerializer(serializers.ModelSerializer):
             return store
         else:
             return 0
+
+
+class MailSerializer(serializers.ModelSerializer):
+    sender = serializers.SerializerMethodField()
+    receiver = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Mail
+        fields = '__all__'
+    
+    def get_sender(self, obj):
+        return {
+            'id': str(obj.sender.id),
+            'name': obj.sender.name,
+            'organization': obj.sender.organization.name if obj.sender.organization else ''
+        }
+    
+    def get_receiver(self, obj):
+        return {
+            'id': str(obj.receiver.id),
+            'name': obj.receiver.name,
+            'organization': obj.receiver.organization.name if obj.receiver.organization else ''
+        }

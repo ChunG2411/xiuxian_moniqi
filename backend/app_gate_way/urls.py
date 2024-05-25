@@ -28,7 +28,9 @@ from app_organization.views import (
     OrganizationView, OrganizationDetailView,
     joinOrganization, outOrganization,
     LocalityView, LocalityDetailView,
-    MineView, MarketView
+    MineView, MarketView,
+    attackMine, attackMarket, attackLocality,
+    MailView
 )
 from app_job.views import (
     HouseView, StoreView, OvenView,
@@ -111,10 +113,14 @@ urlpatterns = [
 
     path('locality', LocalityView.as_view(), name="LocalityView"),
     path('locality/<str:id>', LocalityDetailView.as_view(), name="LocalityDetailView"),
+    path('locality/<str:id>/attack', attackLocality, name="attackLocality"),
     path('mine', MineView.as_view(), name="MineView"),
     path('mine/<str:id>', MineView.as_view(), name="MineView"),
+    path('mine/<str:id>/attack', attackMine, name="attackMine"),
     path('market', MarketView.as_view(), name="MarketView"),
     path('market/<str:id>', MarketView.as_view(), name="MarketView"),
+    path('market/<str:id>/attack', attackMarket, name="attackMarket"),
+    path('mail', MailView.as_view(), name="MailView"),
 
     path('menu', MenuView.as_view(), name="MenuView"),
     path('menu/<str:id>', MenuDetailView.as_view(), name="MenuDetailView"),

@@ -36,3 +36,20 @@ PRIZE_TYPE = [
     ('4', 'Pet'),
     ('5', 'Maid')
 ]
+
+LOCALITY = {
+    'defender' : 2000,
+    'power' : 200
+}
+
+MINE = {
+    'defender' : 2000,
+    'produce' : 2,
+    'limit' : 200
+}
+
+MARKET = {
+    'defender' : 3000,
+    'produce' : 3,
+    'limit' : 300
+}
