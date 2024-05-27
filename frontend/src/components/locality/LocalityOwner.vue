@@ -11,47 +11,31 @@ const store = Store()
 const props = defineProps({
     data: Object
 })
-const bag = ref(null)
+const owner = ref(null)
 const active = ref('1')
 
 
-function getBag(tab) {
+function getOwner() {
     store.loading = true
-    if (tab == '3') {
-        axios.get(`${store.api}/api/money`, store.header)
-            .then(response => {
-                bag.value = response.data
-                store.loading = false
-            })
-            .catch(error => {
-                store.noti = {
-                    'title': 'error',
-                    'content': error.response.data
-                }
-                store.loading = false
-            })
-    }
-    else {
-        axios.get(`${store.api}/api/bag?tab=${tab}`, store.header)
-            .then(response => {
-                bag.value = response.data
-                store.loading = false
-            })
-            .catch(error => {
-                store.noti = {
-                    'title': 'error',
-                    'content': error.response.data
-                }
-                store.loading = false
-            })
-    }
+
+    axios.patch(`${store.api}/api/locality/current`, {}, store.header)
+        .then(response => {
+            owner.value = response.data
+            store.loading = false
+        })
+        .catch(error => {
+            store.noti = {
+                'title': 'error',
+                'content': error.response.data
+            }
+            store.loading = false
+        })
 }
-getBag('1')
+getOwner()
 
 function activeTab(e) {
     const tabs = document.querySelectorAll('.bag-tab-item')
     active.value = e.target.id
-    getBag(e.target.id)
     tabs.forEach((tab) => {
         tab.classList.remove('active')
     })
@@ -59,33 +43,29 @@ function activeTab(e) {
 }
 
 function reload() {
-    getBag(active.value)
+    getOwner()
 }
 
 </script>
 
 <template>
-    <div class="bag" v-if="bag">
+    <div class="bag" v-if="owner">
         <div class="bag-tab">
-            <p class="bag-tab-item active" id="1" @click="activeTab($event)">Vật phẩm</p>
-            <p class="bag-tab-item" id="2" @click="activeTab($event)">Công pháp</p>
-            <p class="bag-tab-item" id="3" @click="activeTab($event)">Linh thạch</p>
+            <p class="bag-tab-item active" id="1" @click="activeTab($event)">Mỏ quặng</p>
+            <p class="bag-tab-item" id="2" @click="activeTab($event)">Khu buôn bán</p>
         </div>
         <div class="bag-content" v-if="active == '1'">
-            <div class="item-content-row" v-for="i in bag">
+            <div class="item-content-row" v-for="i in owner.mine">
                 <div class="item-row-left">
-                    <div class="item-img-small" :class="`border-color-${i.quality}`">
-                        <img :src="store.api + i.image">
-                    </div>
                     <b>{{ i.name }}</b>
                 </div>
                 <div class="item-row-right">
-                    <p>Số lượng: {{ i.quantity }}</p>
-                    <div class="icon-normal" @click="addCard('item', {
-        name: i.name,
-        path: i.id,
-        parent: 'bag'
-    })">
+                    <p>Cấp độ: {{ i.level }}</p>
+                    <div class="icon-normal" @click="addCard('mine_detail', {
+                        name: i.name,
+                        path: i.id,
+                        parent: owner.owner
+                    })">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="#000000" stroke-width="2" stroke-linecap="square" stroke-linejoin="arcs">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -97,20 +77,17 @@ function reload() {
             </div>
         </div>
         <div class="bag-content" v-if="active == '2'">
-            <div class="item-content-row" v-for="i in bag">
+            <div class="item-content-row" v-for="i in owner.market">
                 <div class="item-row-left">
-                    <div class="item-img-small" :class="`border-color-${i.quality}`">
-                        <img :src="store.api + i.image">
-                    </div>
                     <b>{{ i.name }}</b>
                 </div>
-                <div class="item-row-right" @click="addCard('book', {
-        name: i.name,
-        path: i.id,
-        parent: 'bag'
-    })">
-                    <p>Số lượng: {{ i.quantity }}</p>
-                    <div class="icon-normal">
+                <div class="item-row-right">
+                    <p>Cấp độ: {{ i.level }}</p>
+                    <div class="icon-normal"  @click="addCard('market_detail', {
+                        name: i.name,
+                        path: i.id,
+                        parent: owner.owner
+                    })">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="#000000" stroke-width="2" stroke-linecap="square" stroke-linejoin="arcs">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -120,20 +97,6 @@ function reload() {
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="bag-content" v-if="active == '3'">
-            <table class="table table-hover m-0">
-                <tbody>
-                    <tr>
-                        <th>Linh thạch</th>
-                        <td>{{ bag.money }}</td>
-                    </tr>
-                    <tr>
-                        <th>Cống hiến</th>
-                        <td>{{ bag.dedication }}</td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </div>
     <div v-else></div>

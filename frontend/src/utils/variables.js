@@ -53,8 +53,26 @@ const title = {
     'lake': 'Linh đàm',
     'store': 'Kho',
     'oven': 'Lò luyện',
-    'shop_house': 'Cửa hàng'
+    'shop_house': 'Cửa hàng',
 
+    'organization': 'Tổ chức',
+    'organ_list': 'Tổ chức',
+    'organ_detail': 'Tổ chức:',
+    'member_organ': 'Nhân sĩ:',
+
+    'locality': 'Thế lực',
+    'locality_detail': 'Thế lực:',
+    'locality_create': 'Tạo thế lực',
+    'locality_mail': 'Quân tin',
+    'locality_modify': 'Chỉnh sửa:',
+    'locality_restore': 'Hồi phục:',
+    'locality_range': 'Lân cận:',
+    'locality_owner': 'Đã chiếm:',
+    'mail_detail': 'Quân tin',
+    'mail_send': 'Gủi tin:',
+
+    'mine_detail': 'Mỏ quặng:',
+    'market_detail': 'Khu buôn bán:',
 }
 
 const level = {
@@ -127,4 +145,17 @@ const seed = {
     '3': 'Linh ngư'
 }
 
-export { title, level, quality, type, properties, position_clan, seed}
+const locality = {
+    'defender' : 2000,
+    'power' : 200
+}
+
+const mine = {
+    'defender' : 2000
+}
+
+const market = {
+    'defender' : 3000
+}
+
+export { title, level, quality, type, properties, position_clan, seed, locality, mine, market }

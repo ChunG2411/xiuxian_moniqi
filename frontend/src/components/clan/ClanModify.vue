@@ -105,15 +105,15 @@ function reload() {
 <template>
     <div class="d-flex flex-column gap-2 p-2" v-if="clan">
         <div class="row">
-            <p class="col-4">Tên</p>
+            <p class="col-4 d-flex align-items-center">Tên</p>
             <input type="text" class="col-8" placeholder="Nhập tên môn phái" v-model="clan.name">
         </div>
         <div class="row">
-            <p class="col-4">Giới thiệu</p>
+            <p class="col-4 d-flex align-items-center">Giới thiệu</p>
             <input type="text" class="col-8" placeholder="Nhập giới thiệu" v-model="clan.description">
         </div>
         <div class="row">
-            <p class="col-4">Thông báo</p>
+            <p class="col-4 d-flex align-items-center">Thông báo</p>
             <input type="text" class="col-8" placeholder="Nhập thông báo" v-model="clan.notification">
         </div>
         <div class="row">

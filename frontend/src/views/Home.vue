@@ -56,6 +56,24 @@ import Oven from '../components/job/Oven.vue'
 import StoreHouse from '../components/job/Store.vue'
 import ShopHouse from '../components/job/Shop.vue'
 
+import MyOrgan from '../components/organization/MyOrgan.vue'
+import OrganList from '../components/organization/OrganList.vue'
+import OrganDetail from '../components/organization/OrganDetail.vue'
+import OrganMember from '../components/organization/OrganMember.vue'
+
+import MyLocality from '../components/locality/MyLocality.vue'
+import LocalityDetail from '../components/locality/LocalityDetail.vue'
+import LocalityModify from '../components/locality/LocalityModify.vue'
+import LocalityRestore from '../components/locality/LocalityRestore.vue'
+import LocalityRange from '../components/locality/LocalityRange.vue'
+import LocalityOwner from '../components/locality/LocalityOwner.vue'
+import LocalityMail from '../components/locality/LocalityMail.vue'
+import MailDetail from '../components/locality/MailDetail.vue'
+import MailSend from '../components/locality/MailSend.vue'
+
+import MineDetail from '../components/mine/MineDetail.vue'
+import MarketDetail from '../components/mine/MarketDetail.vue'
+
 
 const store = Store()
 
@@ -120,6 +138,24 @@ const store = Store()
             <Oven :data="i.data" v-if="i.body == 'oven'"></Oven>
             <StoreHouse :data="i.data" v-if="i.body == 'store'"></StoreHouse>
             <ShopHouse :data="i.data" v-if="i.body == 'shop_house'"></ShopHouse>
+
+            <MyOrgan :data="i.data" v-if="i.body == 'organization'"></MyOrgan>
+            <OrganList :data="i.data" v-if="i.body == 'organ_list'"></OrganList>
+            <OrganDetail :data="i.data" v-if="i.body == 'organ_detail'"></OrganDetail>
+            <OrganMember :data="i.data" v-if="i.body == 'member_organ'"></OrganMember>
+
+            <MyLocality :data="i.data" v-if="i.body == 'locality'"></MyLocality>
+            <LocalityDetail :data="i.data" v-if="i.body == 'locality_detail'"></LocalityDetail>
+            <LocalityModify :data="i.data" v-if="i.body == 'locality_modify'"></LocalityModify>
+            <LocalityRestore :data="i.data" v-if="i.body == 'locality_restore'"></LocalityRestore>
+            <LocalityRange :data="i.data" v-if="i.body == 'locality_range'"></LocalityRange>
+            <LocalityOwner :data="i.data" v-if="i.body == 'locality_owner'"></LocalityOwner>
+            <LocalityMail :data="i.data" v-if="i.body == 'locality_mail'"></LocalityMail>
+            <MailDetail :data="i.data" v-if="i.body == 'mail_detail'"></MailDetail>
+            <MailSend :data="i.data" v-if="i.body == 'mail_send'"></MailSend>
+
+            <MineDetail :data="i.data" v-if="i.body == 'mine_detail'"></MineDetail>
+            <MarketDetail :data="i.data" v-if="i.body == 'market_detail'"></MarketDetail>
 
         </template>
     </Card>

@@ -30,7 +30,8 @@ class LocalitySerializer(serializers.ModelSerializer):
         validated_data['pos_x'] = random.randint(0, 1000)
         validated_data['pos_y'] = random.randint(0, 1000)
         locality = Locality(**validated_data)
-        locality.name = char.name
+        if not locality.name:
+            locality.name = char.name
         locality.save()
         return locality
     

@@ -30,7 +30,7 @@ from app_organization.views import (
     LocalityView, LocalityDetailView,
     MineView, MarketView,
     attackMine, attackMarket, attackLocality,
-    MailView
+    MailView, MailDetailView
 )
 from app_job.views import (
     HouseView, StoreView, OvenView,
@@ -121,6 +121,7 @@ urlpatterns = [
     path('market/<str:id>', MarketView.as_view(), name="MarketView"),
     path('market/<str:id>/attack', attackMarket, name="attackMarket"),
     path('mail', MailView.as_view(), name="MailView"),
+    path('mail/<str:id>', MailDetailView.as_view(), name="MailDetailView"),
 
     path('menu', MenuView.as_view(), name="MenuView"),
     path('menu/<str:id>', MenuDetailView.as_view(), name="MenuDetailView"),

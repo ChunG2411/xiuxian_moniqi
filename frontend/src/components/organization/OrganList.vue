@@ -11,15 +11,15 @@ const store = Store()
 const props = defineProps({
     data: Object
 })
-const clan = ref(null)
+const organ = ref(null)
 
 
-function getClan() {
+function getOrgan() {
     store.loading = true
 
-    axios.get(`${store.api}/api/clan`, store.header)
+    axios.get(`${store.api}/api/organization`, store.header)
         .then(response => {
-            clan.value = response.data
+            organ.value = response.data
             store.loading = false
         })
         .catch(error => {
@@ -30,7 +30,7 @@ function getClan() {
             store.loading = false
         })
 }
-getClan()
+getOrgan()
 
 function loadMore(path) {
     store.loading = true
@@ -38,9 +38,9 @@ function loadMore(path) {
     axios.get(path, store.header)
         .then(response => {
             for (let i = 0; i < response.data.results.length; i++) {
-                clan.value.results.push(response.data.results[i])
+                organ.value.results.push(response.data.results[i])
             }
-            clan.value.next = response.data.next
+            organ.value.next = response.data.next
             store.loading = false
         })
         .catch(error => {
@@ -53,17 +53,17 @@ function loadMore(path) {
 }
 
 function reload() {
-    getClan()
+    getOrgan()
 }
 
 </script>
 
 <template>
-    <div class="clan" v-if="clan">
-        <div v-if="clan.results.length == 0">
-            <p>Không tìm thấy môn phái nào</p>
+    <div v-if="organ">
+        <div v-if="organ.results.length == 0">
+            <p>Không tìm thấy tổ chức nào</p>
         </div>
-        <div class="item-content-row" v-for="i in clan.results">
+        <div class="item-content-row" v-for="i in organ.results">
             <div class="item-row-left">
                 <div class="item-img-small">
                     <img :src="store.api + i.image">
@@ -72,7 +72,7 @@ function reload() {
             </div>
             <div class="item-row-right">
                 <p>Nhân sĩ: {{ i.member }}</p>
-                <div class="icon-normal" @click="addCard('clan_detail', {
+                <div class="icon-normal" @click="addCard('organ_detail', {
         name: i.name,
         path: i.id
     })">
@@ -85,8 +85,8 @@ function reload() {
                 </div>
             </div>
         </div>
-        <div v-if="clan.next" class="w-100 text-center mt-2">
-            <button type="button" class="btn btn-primary" @click="loadMore(clan.next)">Xem thêm</button>
+        <div v-if="organ.next" class="w-100 text-center mt-2">
+            <button type="button" class="btn btn-primary" @click="loadMore(organ.next)">Xem thêm</button>
         </div>
     </div>
     <div v-else></div>

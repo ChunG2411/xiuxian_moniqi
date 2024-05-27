@@ -10,7 +10,7 @@ from .models import Organization, Locality, Mine, Market, Mail
 from app_user.models import Characters, Money, Properties
 from xiuxian_moniqi.config import LOCALITY, MINE,MARKET
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Create your views here.
 
@@ -37,22 +37,48 @@ class OrganizationView(APIView):
 class OrganizationDetailView(APIView):
     def get(self, request, id):
         if id == 'current':
+            char = Characters.objects.get(user=request.user)
             try:
-                char = Characters.objects.get(user=request.user)
-                try:
-                    locality = Locality.objects.get(char=char)
-                except:
-                    return Response("Create locality first", status=400)
+                locality = Locality.objects.get(char=char)
+            except:
+                return Response("Create locality first", status=400)
 
+            if locality.organization:
                 organization = locality.organization
                 organization_ser = OrganizationSerializer(organization)
                 return Response(organization_ser.data, status=200)
-            except:
+            else:
                 return Response("Don't have organization", status=400)
         else:
             organization = Organization.objects.get(id=id)
             organization_ser = OrganizationSerializer(organization)
             return Response(organization_ser.data, status=200)
+    
+    def patch(self, request, id):
+        if id == 'current':
+            char = Characters.objects.get(user=request.user)
+            my_locality = Locality.objects.get(char=char)
+            localities = Locality.objects.filter(organization=my_locality.organization).exclude(char=char)
+
+            pagination = PageNumberPagination()
+            page = pagination.paginate_queryset(localities, request)
+            response = [
+                {
+                    'id': str(i.id),
+                    'name': i.name,
+                    'level': i.level,
+                    'owner': i.char.name
+                } for i in page
+            ]
+            response.append({
+                    'id': str(my_locality.id),
+                    'name': my_locality.name,
+                    'level': my_locality.level,
+                    'owner': my_locality.char.name
+                })
+            return pagination.get_paginated_response(response)
+        else:
+            return Response("You don't have permission", status=400)
         
     def delete(self, request, id):
         try:
@@ -72,7 +98,9 @@ def joinOrganization(request, id):
             locality = Locality.objects.get(char=char)
         except:
             return Response("Create locality first", status=400)
-
+        if locality.organization:
+            return Response('You in another organization', status=400)
+        
         locality.organization = organization
         organization.member += 1
         organization.save()
@@ -255,10 +283,11 @@ class LocalityView(APIView):
             pos_y__gte = pos_y - level * 100
         )
         return Response({
+            'owner': str(locality.id),
             'locality': [
                 {
                     'id': str(i.id),
-                    'name': i.char.name,
+                    'name': i.name,
                     'level': i.level,
                     'owner': i.char.name
                 } for i in localities
@@ -268,7 +297,7 @@ class LocalityView(APIView):
                     'id': str(i.id),
                     'name': i.name,
                     'level': i.level,
-                    'owner': i.owner.char.name if i.owner else None
+                    'owner': i.owner.name if i.owner else None
                 } for i in mines
             ],
             'market': [
@@ -276,7 +305,7 @@ class LocalityView(APIView):
                     'id': str(i.id),
                     'name': i.name,
                     'level': i.level,
-                    'owner': i.owner.char.name if i.owner else None
+                    'owner': i.owner.name if i.owner else None
                 } for i in markets
             ]
         }, status=200)
@@ -299,7 +328,11 @@ class LocalityView(APIView):
     
     def delete(self, request):
         char = Characters.objects.get(user=request.user)
-        Locality.objects.get(char=char).delete()
+        locality = Locality.objects.get(char=char)
+        if locality.organization:
+            locality.organization.member -= 1
+            locality.organization.save()
+        locality.delete()
         return Response("Delete successfull", status=200)
     
 
@@ -326,6 +359,7 @@ class LocalityDetailView(APIView):
         markets = Market.objects.filter(owner=locality)
 
         return Response({
+            'owner': str(locality.id),
             'mine': [
                 {
                     'id': str(i.id),
@@ -397,10 +431,9 @@ def attackMine(request, id):
         return Response("You dont enough money", status=400)
     
     now = datetime.now(timezone.get_current_timezone())
-    if mine.time_protect:
-        duration = int((now - mine.time_protect).total_seconds() / 60 / 60)
-        if duration < 24:
-            return Response("Mine in time protect", status=400)
+    if mine.time_protect and now < mine.time_protect:
+        return Response("Mine in time protect", status=400)
+    
     if locality.power < mine.defender:
         defender_left = mine.defender - locality.power
         money.money -= locality.power
@@ -411,12 +444,12 @@ def attackMine(request, id):
         locality.power = 0
         locality.save()
         if defender_left > properties.power:
-            mine.time_protect = now
+            mine.time_protect = now + timedelta(days=1)
             mine.save()
             return Response("Attack fail", status=400)
         else:
             mine.owner = locality
-            mine.time_protect = now
+            mine.time_protect = now + timedelta(days=1)
             mine.save()
             return Response("Attack success", status=200)
     else:
@@ -424,7 +457,7 @@ def attackMine(request, id):
         money.money -= mine.defender
         mine.owner = locality
         mine.defender = 0
-        mine.time_protect = now
+        mine.time_protect = now + timedelta(days=1)
         mine.save()
         money.save()
         locality.save()
@@ -444,10 +477,9 @@ def attackMarket(request, id):
         return Response("You dont enough money", status=400)
     
     now = datetime.now(timezone.get_current_timezone())
-    if market.time_protect:
-        duration = int((now - market.time_protect).total_seconds() / 60 / 60)
-        if duration < 24:
-            return Response("Market in time protect", status=400)
+    if market.time_protect and now < market.time_protect:
+        return Response("Market in time protect", status=400)
+    
     if locality.power < market.defender:
         defender_left = market.defender - locality.power
         money.money -= locality.power
@@ -458,12 +490,12 @@ def attackMarket(request, id):
         locality.power = 0
         locality.save()
         if defender_left > properties.power:
-            market.time_protect = now
+            market.time_protect = now + timedelta(days=1)
             market.save()
             return Response("Attack fail", status=400)
         else:
             market.owner = locality
-            market.time_protect = now
+            market.time_protect = now + timedelta(days=1)
             market.save()
             return Response("Attack success", status=200)
     else:
@@ -471,7 +503,7 @@ def attackMarket(request, id):
         money.money -= market.defender
         market.owner = locality
         market.defender = 0
-        market.time_protect = now
+        market.time_protect = now + timedelta(days=1)
         market.save()
         money.save()
         locality.save()
@@ -494,10 +526,8 @@ def attackLocality(request, id):
         return Response("You dont enough money", status=400)
     
     now = datetime.now(timezone.get_current_timezone())
-    if locality.time_protect:
-        duration = int((now - locality.time_protect).total_seconds() / 60 / 60)
-        if duration < 24:
-            return Response("Locality in time protect", status=400)
+    if locality.time_protect and now < locality.time_protect:
+        return Response("Locality in time protect", status=400)
         
     my_power = my_locality.power + properties.power
     partner_power = locality.defender + locality.power
@@ -512,7 +542,7 @@ def attackLocality(request, id):
             locality.defender = 0
         my_locality.power = 0
         my_locality.save()
-        locality.time_protect = now
+        locality.time_protect = now + timedelta(days=1)
         locality.save()
         return Response("Attack fail", status=400)
     else:
@@ -527,7 +557,7 @@ def attackLocality(request, id):
         money.save()
         locality.defender = 0
         locality.power = 0
-        locality.time_protect = now
+        locality.time_protect = now + timedelta(days=1)
         locality.save()
         my_locality.save()
         return Response("Attack success", status=200)
@@ -540,7 +570,7 @@ class MailView(APIView):
         char = Characters.objects.get(user=request.user)
         locality = Locality.objects.get(char=char)
 
-        if type == 'send':
+        if type == '1':
             mails = Mail.objects.filter(sender=locality)
         else:
             mails = Mail.objects.filter(receiver=locality)
@@ -562,5 +592,13 @@ class MailView(APIView):
             receiver = locality,
             content = content
         )
+        serializer = MailSerializer(mail)
+        return Response(serializer.data, status=200)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class MailDetailView(APIView):
+    def get(self, request, id):
+        mail = Mail.objects.get(id=id)
         serializer = MailSerializer(mail)
         return Response(serializer.data, status=200)
