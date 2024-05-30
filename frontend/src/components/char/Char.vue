@@ -245,6 +245,10 @@ function removeMember() {
         <div class="button-group" v-if="props.data.parent == 'member'">
             <button type="button" class="btn btn-success" @click="removeMember">Trục xuất</button>
         </div>
+        <button type="button" class="btn btn-primary" @click="addCard('chat_send', {
+            name: char.name,
+            path: char.id
+        })">Truyền tin</button>
     </div>
     <div v-else></div>
 

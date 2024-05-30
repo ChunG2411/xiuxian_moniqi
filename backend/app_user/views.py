@@ -14,13 +14,13 @@ from .models import (
     User, Characters, Properties, OwnPet,
     Bag, Equipped, Money, Knowledge,
     Study, StudyProcess,
-    Relationship
+    Chat
 )
 from .serializers import (
     UserRegisterSerializers, CharactersSerializers, OwnPetSerializer,
     BagSerializer, MoneySerializer, EquippedSerializer, KnowledgeSerializer,
     StudySerializer, StudyProcessSerializer,
-    RelationshipSerializer
+    ChatSerializer
 )
 from app_item.models import Item, Menu, Book, Pet
 from app_location.models import Tower
@@ -571,76 +571,6 @@ def getRank(request):
     return pagination.get_paginated_response(results.data)
 
 
-@permission_classes([permissions.IsAuthenticated])
-class RelationshipView(APIView):
-    def get(self, request):
-        partner = request.query_params.get('partner')
-        if partner:
-            char_1 = Characters.objects.get(user=request.user)
-            char_2 = Characters.objects.get(id=partner)
-
-            try:
-                relation = Relationship.objects.get(char1=char_1, char2=char_2)
-            except:
-                try:
-                    relation = Relationship.objects.get(
-                        char1=char_2, char2=char_1)
-                except:
-                    relation = Relationship.objects.create(
-                        char1=char_1, char2=char_2)
-            relation_ser = RelationshipSerializer(relation)
-            return Response(relation_ser.data, status=200)
-
-        else:
-            char = Characters.objects.get(user=request.user)
-            relation = Relationship.objects.filter(
-                Q(char1=char) | Q(char2=char))
-            pagination = PageNumberPagination()
-            page = pagination.paginate_queryset(relation, request)
-            relation_ser = RelationshipSerializer(page, many=True)
-            return pagination.get_paginated_response(relation_ser.data)
-
-    def post(self, request):
-        partner = request.data.get('partner')
-        item_id = request.data.get('item_id')
-
-        char_1 = Characters.objects.get(user=request.user)
-        char_2 = Characters.objects.get(id=partner)
-        item = Item.objects.get(id=item_id)
-        bag = Bag.objects.get(char=char_1)
-        try:
-            relation = Relationship.objects.get(char1=char_1, char2=char_2)
-        except:
-            try:
-                relation = Relationship.objects.get(char1=char_2, char2=char_1)
-            except:
-                relation = Relationship.objects.create(
-                    char1=char_1, char2=char_2)
-        f_removeItemfromBag(bag, item)
-        relation.point += 10
-        relation.save()
-        relation_ser = RelationshipSerializer(relation)
-        return Response(relation_ser.data, status=200)
-
-    def delete(self, request):
-        partner = request.query_params.get('partner')
-        char_1 = Characters.objects.get(user=request.user)
-        char_2 = Characters.objects.get(id=partner)
-
-        try:
-            relation = Relationship.objects.get(char1=char_1, char2=char_2)
-        except:
-            try:
-                relation = Relationship.objects.get(char1=char_2, char2=char_1)
-            except:
-                relation = Relationship.objects.create(
-                    char1=char_1, char2=char_2)
-        relation.point -= 10
-        relation.save()
-        relation_ser = RelationshipSerializer(relation)
-        return Response(relation_ser.data, status=200)
-
-
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def restore(request):
@@ -758,3 +688,42 @@ class OwnPetView(APIView):
 
         return Response('Remove successful', status=200)
 
+
+@permission_classes([permissions.IsAuthenticated])
+class ChatView(APIView):
+    def get(self, request):
+        type = request.query_params.get('type')
+        char = Characters.objects.get(user=request.user)
+
+        if type == '1':
+            chats = Chat.objects.filter(sender=char)
+        else:
+            chats = Chat.objects.filter(receiver=char)
+
+        pagination = PageNumberPagination()
+        page = pagination.paginate_queryset(chats, request)
+        serializer = ChatSerializer(page, many=True)
+        return pagination.get_paginated_response(serializer.data)
+    
+    def post(self, request):
+        to = request.data.get('to')
+        content = request.data.get('content')
+
+        my_char = Characters.objects.get(user=request.user)
+        char = Characters.objects.get(id=to)
+
+        chat = Chat.objects.create(
+            sender = my_char,
+            receiver = char,
+            content = content
+        )
+        serializer = ChatSerializer(chat)
+        return Response(serializer.data, status=200)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class ChatDetailView(APIView):
+    def get(self, request, id):
+        chat = Chat.objects.get(id=id)
+        serializer = ChatSerializer(chat)
+        return Response(serializer.data, status=200)

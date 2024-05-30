@@ -6,10 +6,9 @@ from app_user.views import (
     useItem, buyItem, sellItem,
     KnowledgeView,
     buyBook, sellBook, StudyView, StudyProcessView, StudyProcessDetailView,
-    getRank,
-    RelationshipView,
-    restore,
-    OwnPetView
+    getRank, restore,
+    OwnPetView,
+    ChatView, ChatDetailView
 )
 from app_item.views import (
     ItemView, ItemDetailView, getRandomItem,
@@ -45,7 +44,8 @@ from app_location.views import (
     CityView, CityDetailView, CityShopView,
     TowerView,
     FightResult, GameResult,
-    QuestionView, QuestionCharView
+    QuestionView, QuestionCharView,
+    ArenaView, ArenaDetailView
 )
 
 
@@ -64,8 +64,9 @@ urlpatterns = [
     path('level-up', LevelUpView, name="LevelUpView"),
     path('meditation', Meditation, name="Meditation"),
     path('rank', getRank, name="getRank"),
-    path('relationship', RelationshipView.as_view(), name="RelationshipView"),
     path('restore', restore, name="restore"),
+    path('chat', ChatView.as_view(), name="ChatView"),
+    path('chat/<str:id>', ChatDetailView.as_view(), name="ChatDetailView"),
 
     path('items', ItemView.as_view(), name="ItemView"),
     path('items/<str:id>', ItemDetailView.as_view(), name="ItemDetailView"),
@@ -159,5 +160,7 @@ urlpatterns = [
     path('game', GameResult, name="GameResult"),
     path('question', QuestionView.as_view(), name="QuestionView"),
     path('question/current', QuestionCharView.as_view(), name="QuestionCharView"),
+    path('arena', ArenaView.as_view(), name="ArenaView"),
+    path('arena/<str:id>', ArenaDetailView.as_view(), name="ArenaDetailView"),
 
 ]

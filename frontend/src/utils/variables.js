@@ -73,6 +73,12 @@ const title = {
 
     'mine_detail': 'Mỏ quặng:',
     'market_detail': 'Khu buôn bán:',
+
+    'chat': 'Truyền tin',
+    'chat_send': 'Gửi tin:',
+    'chat_detail': 'Truyền tin:',
+
+    'arena': 'Đấu trường'
 }
 
 const level = {

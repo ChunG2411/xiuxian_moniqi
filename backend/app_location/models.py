@@ -27,6 +27,17 @@ class Tower(models.Model):
         verbose_name = 'Tháp khiêu chiến'
 
 
+class Arena(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    number = models.IntegerField(default=1)
+    char = models.ForeignKey(Characters, on_delete=models.CASCADE, unique=True, related_name="Arena_char")
+
+    class Meta:
+        db_table = 'tb_arena'
+        verbose_name = 'Đấu trường'
+        ordering = ['-number']
+    
+
 class Question(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     number = models.IntegerField()

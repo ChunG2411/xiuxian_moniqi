@@ -19,7 +19,7 @@ const props = defineProps({
         <div class="item-content-row">
             <div class="item-row-left">
                 <div class="item-img-small">
-                    <img src="../../assets/image/house.jpg">
+                    <img src="../../assets/image/locality.png">
                 </div>
                 <b>Thế lực</b>
             </div>

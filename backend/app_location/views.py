@@ -4,8 +4,8 @@ from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 
-from .models import City, Tower, Question, QuestionChar
-from .serializers import CitySerializer, TowerSerializer, QuestionSerializer, QuestionCharSerializer
+from .models import City, Tower, Question, QuestionChar, Arena
+from .serializers import CitySerializer, TowerSerializer, QuestionSerializer, ArenaSerializer
 from app_user.models import Bag, Characters, Properties, Money
 from app_item.models import Item, Book
 from app_item.serializers import ItemSerializer, BookSerializer
@@ -328,3 +328,48 @@ class QuestionCharView(APIView):
             question_char.question += 1
             question_char.save()
             return Response('Fail', status=400)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class ArenaView(APIView):
+    def get(self, request):
+        char = Characters.objects.get(user=request.user)
+        arena = Arena.objects.all().exclude(char=char)
+        pagination = PageNumberPagination()
+        page = pagination.paginate_queryset(arena, request)
+        serializer = ArenaSerializer(page, many=True)
+        return pagination.get_paginated_response(serializer.data)
+
+    def post(self, request):
+        char = Characters.objects.get(user=request.user)
+        arena = Arena.objects.create(char=char)
+        serializer = ArenaSerializer(arena)
+        return Response(serializer.data, status=200)
+    
+    def delete(self, request):
+        char = Characters.objects.get(user=request.user)
+        Arena.objects.get(char=char).delete()
+        return Response("Delete successful", status=200)
+
+
+@permission_classes([permissions.IsAuthenticated])
+class ArenaDetailView(APIView):
+    def get(self, request, id):
+        if id == 'current':
+            char = Characters.objects.get(user=request.user)
+        else:
+            char = Characters.objects.get(id=id)
+        try:
+            arena = Arena.objects.get(char=char)
+        except:
+            return Response("You dont have arena", status=400)
+        serializer = ArenaSerializer(arena)
+        return Response(serializer.data)
+    
+    def post(self, request, id):
+        arena = Arena.objects.get(id=id)
+        char = Characters.objects.get(user=request.user)
+        if arena.char == char:
+            return Response("You cant attack your self", status=400)
+        arena.delete()
+        return Response("Attacking ...", status=200)

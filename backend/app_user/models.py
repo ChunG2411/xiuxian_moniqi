@@ -153,12 +153,15 @@ class OwnPet(models.Model):
         verbose_name = 'Nuôi thú'
 
 
-class Relationship(models.Model):
-    char1 = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Relationship_char1")
-    char2 = models.ForeignKey(Characters, on_delete=models.CASCADE, related_name="Relationship_char2")
-    point = models.IntegerField(default=0)
+class Chat(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    sender = models.ForeignKey(Characters, on_delete=models.CASCADE, null=True, related_name="Chat_sender")
+    receiver = models.ForeignKey(Characters, on_delete=models.CASCADE, null=True, related_name="Chat_receiver")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'tb_relationship'
-        verbose_name = 'Mối quan hệ'
+        db_table = 'tb_chat'
+        verbose_name = 'Truyền tin'
+        ordering = ['-created_at']
 

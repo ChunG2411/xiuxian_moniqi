@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from .models import (
     User, Characters, Properties, Title,
-    Bag, Equipped, Money, Knowledge, Study, Relationship, StudyProcess,
+    Bag, Equipped, Money, Knowledge, Study, Chat, StudyProcess,
     OwnPet
 )
 from app_item.models import Item, Book
@@ -24,6 +24,7 @@ class UserRegisterSerializers(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
 
 class TitleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -210,7 +211,22 @@ class OwnPetSerializer(serializers.ModelSerializer):
         return PetSerializer(obj.pet).data if obj.pet else ""
     
 
-class RelationshipSerializer(serializers.ModelSerializer):
+class ChatSerializer(serializers.ModelSerializer):
+    sender = serializers.SerializerMethodField()
+    receiver = serializers.SerializerMethodField()
+
     class Meta:
-        model = Relationship
+        model = Chat
         fields = '__all__'
+
+    def get_sender(self, obj):
+        return {
+            'id': str(obj.sender.id),
+            'name': obj.sender.name
+        }
+
+    def get_receiver(self, obj):
+        return {
+            'id': str(obj.receiver.id),
+            'name': obj.receiver.name
+        }

@@ -104,28 +104,24 @@ function reload() {
     <div v-else></div>
 
     <div class="fullboard" v-if="show_board.status">
-        <div class="d-flex flex-column gap-3 align-items-center" v-if="show_board.name == 'win'">
+        <div class="d-flex flex-column gap-2 align-items-center" v-if="show_board.name == 'win'">
             <h5>Chiến thắng</h5>
-            <small>Nhận được</small>
-            <table class="table table-hover m-0">
-                <tbody>
-                    <tr>
-                        <th>Linh thạch</th>
-                        <td>{{ prize.money }}</td>
-                    </tr>
-                    <tr>
-                        <th>Vật phẩm</th>
-                        <td>
-                            <div class="item-img-small" @click="addCard('item', {
-        name: prize.item.name,
-        path: prize.item.id
-    })">
-                                <img :src="store.api + prize.item.image" :class="`border-color-${prize.item.quality}`">
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <p>Nhận được</p>
+            <div class="mb-4 mt-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <b>Linh thạch</b>
+                    <p>{{ prize.money }}</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <b>Vật phẩm</b>
+                    <div class="item-img-small" @click="addCard('item', {
+                        name: prize.item.name,
+                        path: prize.item.id
+                    })">
+                        <img :src="store.api + prize.item.image" :class="`border-color-${prize.item.quality}`">
+                    </div>
+                </div>
+            </div>
             <button class="btn btn-success" type="button" @click="show_board.status = false">Đồng ý</button>
         </div>
         <div class="d-flex flex-column gap-3 align-items-center" v-if="show_board.name == 'fight'">

@@ -74,6 +74,12 @@ import MailSend from '../components/locality/MailSend.vue'
 import MineDetail from '../components/mine/MineDetail.vue'
 import MarketDetail from '../components/mine/MarketDetail.vue'
 
+import Chat from '../components/chat/Chat.vue'
+import ChatDetail from '../components/chat/ChatDetail.vue'
+import ChatSend from '../components/chat/ChatSend.vue'
+
+import Arena from '../components/location/Arena.vue'
+
 
 const store = Store()
 
@@ -156,6 +162,12 @@ const store = Store()
 
             <MineDetail :data="i.data" v-if="i.body == 'mine_detail'"></MineDetail>
             <MarketDetail :data="i.data" v-if="i.body == 'market_detail'"></MarketDetail>
+
+            <Chat :data="i.data" v-if="i.body == 'chat'"></Chat>
+            <ChatDetail :data="i.data" v-if="i.body == 'chat_detail'"></ChatDetail>
+            <ChatSend :data="i.data" v-if="i.body == 'chat_send'"></ChatSend>
+
+            <Arena :data="i.data" v-if="i.body == 'arena'"></Arena>
 
         </template>
     </Card>
