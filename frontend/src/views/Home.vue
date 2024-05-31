@@ -79,6 +79,7 @@ import ChatDetail from '../components/chat/ChatDetail.vue'
 import ChatSend from '../components/chat/ChatSend.vue'
 
 import Arena from '../components/location/Arena.vue'
+import Attack from '../components/char/Attack.vue'
 
 
 const store = Store()
@@ -168,6 +169,7 @@ const store = Store()
             <ChatSend :data="i.data" v-if="i.body == 'chat_send'"></ChatSend>
 
             <Arena :data="i.data" v-if="i.body == 'arena'"></Arena>
+            <Attack :data="i.data" v-if="i.body == 'attack'"></Attack>
 
         </template>
     </Card>

@@ -78,7 +78,8 @@ const title = {
     'chat_send': 'Gửi tin:',
     'chat_detail': 'Truyền tin:',
 
-    'arena': 'Đấu trường'
+    'arena': 'Đấu trường',
+    'attack': 'Đối chiến:'
 }
 
 const level = {
@@ -121,7 +122,13 @@ const properties = {
     'mau_huyet': 'Máu huyết',
     'cong_kich': 'Công kích',
     'phong_ngu': 'Phòng ngự',
-    'toc_do': 'Tốc dộ',
+    'ne_tranh': 'Né tránh',
+    'chi_mang': 'Chí mạng',
+    'sat_thuong_chi_mang': 'Sát thương chí mạng',
+    'hoi_phuc': 'Hồi phục',
+    'luc_hoi_phuc': 'Lực hồi phục',
+    'hut_mau': 'Hút máu',
+    'phan_kich': 'Phản kích',
 
     'luyen_khi': 'Luyện khí',
     'luyen_dan': 'Luyện đan',

@@ -58,6 +58,10 @@ p {
   color: var(--text_color);
 }
 
+b {
+  font-size: 15px;
+}
+
 small {
   margin: 0;
   font-size: 13px;

@@ -64,7 +64,13 @@ class Properties(models.Model):
     mau_huyet = models.IntegerField(default=10, verbose_name="máu huyết")
     cong_kich = models.IntegerField(default=2, verbose_name="công kích")
     phong_ngu = models.IntegerField(default=1, verbose_name="phòng ngự")
-    toc_do = models.IntegerField(default=1, verbose_name="tốc độ")
+    ne_tranh = models.IntegerField(default=0, verbose_name="né tránh")
+    chi_mang = models.IntegerField(default=0, verbose_name="chí mạng")
+    sat_thuong_chi_mang = models.IntegerField(default=0, verbose_name="sát thương chí mạng")
+    hoi_phuc = models.IntegerField(default=0, verbose_name="hồi phục")
+    luc_hoi_phuc = models.IntegerField(default=0, verbose_name="lực hồi phục")
+    hut_mau = models.IntegerField(default=0, verbose_name="hút máu")
+    phan_kich = models.IntegerField(default=0, verbose_name="phản kích")
 
     luyen_khi = models.IntegerField(default=0, verbose_name="luyện khí")
     luyen_dan = models.IntegerField(default=0, verbose_name="luyện đan")
@@ -76,7 +82,16 @@ class Properties(models.Model):
         verbose_name = 'Thuộc tính'
     
     def save(self, *args, **kwargs):
-        self.power = self.mau_huyet + self.cong_kich + self.phong_ngu + self.toc_do
+        if self.tam_tinh > 100: self.tam_tinh = 100
+        if self.suc_khoe > 100: self.suc_khoe = 100
+        if self.chi_mang > 100: self.chi_mang = 100
+        if self.hoi_phuc > 100: self.hoi_phuc = 100
+        if self.hut_mau > 100: self.hut_mau = 100
+        if self.phan_kich > 100: self.phan_kich = 100
+
+        self.power = (self.mau_huyet + self.cong_kich + self.phong_ngu + self.ne_tranh
+                    + self.chi_mang + self.sat_thuong_chi_mang + self.hoi_phuc
+                    + self.luc_hoi_phuc + self.hut_mau + self.phan_kich)
         super().save(*args, **kwargs)
 
 

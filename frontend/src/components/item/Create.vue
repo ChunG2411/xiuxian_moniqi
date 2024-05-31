@@ -139,7 +139,16 @@ function createItem() {
         mar += create.materials[i] + ','
     }
     const form = new FormData()
-    form.append('menu_id', create.menu_id)
+    if (create.menu_id) {
+        form.append('menu_id', create.menu_id)
+    }
+    else {
+        store.noti = {
+            'title': 'error',
+            'content': 'Vui lòng lựa chọn công thức'
+        }
+        return
+    }
     form.append('materials', mar)
     form.append('lucky_id', create.lucky_id)
 

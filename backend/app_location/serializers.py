@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import City, Tower, Question, QuestionChar, Arena
+from app_user.models import Characters
 
 
 class CitySerializer(serializers.ModelSerializer):
@@ -44,12 +45,16 @@ class ArenaSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def create(self, validated_data):
+        request = self.context.get('request')
+        char = Characters.objects.get(user=request.user)
         try:
-            count = Arena.objects.last().number + 1
+            count = Arena.objects.latest('number').number + 1
         except:
             count = 1
+        
+        validated_data['char'] = char
+        validated_data['number'] = count
         arena = Arena(**validated_data)
-        arena.number = count
         arena.save()
         return arena
 

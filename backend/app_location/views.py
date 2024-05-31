@@ -163,17 +163,16 @@ class TowerView(APIView):
 def FightResult(request):
     type = request.data.get('type')
     char_id = request.data.get('char_id')
+    results = request.data.get('results')
 
     char_1 = Characters.objects.get(user=request.user)
     char_2 = Characters.objects.get(id=char_id)
-    pro_1 = Properties.objects.get(char=char_1)
-    pro_2 = Properties.objects.get(char=char_2)
     bag_1 = Bag.objects.get(char=char_1)
     bag_2 = Bag.objects.get(char=char_2)
     money_1 = Money.objects.get(char=char_1)
     money_2 = Money.objects.get(char=char_2)
 
-    if pro_1.power <= pro_2.power:
+    if results == '0':
         if type == '0':
             return Response('Lose', status=400)
         else:
@@ -341,10 +340,12 @@ class ArenaView(APIView):
         return pagination.get_paginated_response(serializer.data)
 
     def post(self, request):
-        char = Characters.objects.get(user=request.user)
-        arena = Arena.objects.create(char=char)
-        serializer = ArenaSerializer(arena)
-        return Response(serializer.data, status=200)
+        serializer = ArenaSerializer(context={"request": request}, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        else:
+            return Response(serializer.errors, status=400)
     
     def delete(self, request):
         char = Characters.objects.get(user=request.user)
@@ -369,6 +370,11 @@ class ArenaDetailView(APIView):
     def post(self, request, id):
         arena = Arena.objects.get(id=id)
         char = Characters.objects.get(user=request.user)
+        properties = Properties.objects.get(char=char)
+        properties_arena = Properties.objects.get(char=arena.char)
+        
+        if properties.canh_gioi > properties_arena.canh_gioi:
+            return Response("Your level not suitable", status=400)
         if arena.char == char:
             return Response("You cant attack your self", status=400)
         arena.delete()

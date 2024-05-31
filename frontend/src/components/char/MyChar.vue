@@ -155,9 +155,25 @@ function reload() {
                         <th>Sức khỏe</th>
                         <td>{{ char.properties.suc_khoe }}</td>
                         <th>Tốc độ</th>
-                        <td>{{ char.properties.toc_do }}</td>
+                        <td>{{ char.properties.ne_tranh }}</td>
                         <th>May mắn</th>
                         <td>{{ char.properties.may_man }}</td>
+                    </tr>
+                    <tr>
+                        <th>Chí mạng</th>
+                        <td>{{ char.properties.chi_mang }}</td>
+                        <th>Sát thương chí mạng</th>
+                        <td>{{ char.properties.sat_thuong_chi_mang }}</td>
+                        <th>Hút máu</th>
+                        <td>{{ char.properties.hut_mau }}</td>
+                    </tr>
+                    <tr>
+                        <th>Hồi phục</th>
+                        <td>{{ char.properties.hoi_phuc }}</td>
+                        <th>Lực hồi phục</th>
+                        <td>{{ char.properties.luc_hoi_phuc }}</td>
+                        <th>Phản kích</th>
+                        <td>{{ char.properties.phan_kich }}</td>
                     </tr>
                 </tbody>
             </table>

@@ -4,6 +4,7 @@ import axios from 'axios'
 
 import Store from '../../utils/store.js'
 import { addCard } from '../../utils/function.js'
+import Attack from '../char/Attack.vue'
 
 
 const store = Store()
@@ -89,16 +90,20 @@ function delArena() {
         })
 }
 
-function attack(id) {
+function attack(obj) {
     store.loading = true
 
-    axios.post(`${store.api}/api/arena/${id}`, {}, store.header)
+    axios.post(`${store.api}/api/arena/${obj.id}`, {}, store.header)
         .then(response => {
             store.loading = false
             store.noti = {
                 'title': 'success',
-                'content': "Đang tấn công"
+                'content': "Bắt đầu tấn công"
             }
+            addCard('attack', {
+                name: obj.char.name,
+                path: obj.char.id
+            })
             listArena()
         })
         .catch(error => {
@@ -152,7 +157,7 @@ function reload() {
                 <b>Số {{ i.number }}</b>
             </div>
             <div class="item-row-right w-75">
-                <button class="btn btn-warning" @click="attack(i.id)">Tham chiến</button>
+                <button class="btn btn-warning" @click="attack(i)">Tham chiến</button>
                 <div class="icon-normal" @click="addCard('char', {
                     name: i.char.name,
                     path: i.char.id
